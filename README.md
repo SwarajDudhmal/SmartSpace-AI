@@ -174,7 +174,3 @@ SmartSpace-AI/
     ├── test_dqn.py
     └── test_vision.py
 ```
-
-### Viva refinement and local verification
-
-See [the Viva review guide](docs/VIVA_REVIEW.md) for the annotated SAT/A*/DQN/YOLO walkthrough, background-job API contract, cleanup record and verified demo commands. On this machine, use `.venv-viva\Scripts\python.exe app.py`; the original virtual environments reference Python installations from another computer. The guide clearly distinguishes trained-model inference from the catalogue/spatial fallback.
