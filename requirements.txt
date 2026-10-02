@@ -1,0 +1,11 @@
+# SmartSpace AI Dependencies
+Flask>=3.0.0
+numpy>=1.24.0
+scipy>=1.11.0
+pillow>=10.0.0
+matplotlib>=3.8.0
+reportlab>=4.0.0
+
+# Optional dependencies for direct GPU/Deep Learning training
+# pip install torch torchvision ultralytics
+# pip install onnxruntime

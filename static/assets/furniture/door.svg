@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <defs><linearGradient id="door" x1="3" y1="3" x2="117" y2="37" gradientUnits="userSpaceOnUse"><stop stop-color="#ddc9a7"/><stop offset="1" stop-color="#ad875a"/></linearGradient></defs>
+  <path d="M4 36A34 34 0 0 1 38 2" stroke="#b69a73" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <path d="M8 36h99" stroke="#65503c" stroke-width="5" stroke-linecap="round"/>
+  <path d="M9 35V7c0-2 2-4 4-4h22c2 0 4 2 4 4v28" fill="url(#door)" stroke="#705438" stroke-width="2"/>
+  <path d="M15 30V10c0-1 1-2 2-2h14c1 0 2 1 2 2v20" stroke="#f0dfc2" stroke-opacity=".78" stroke-width="1.4"/>
+  <circle cx="33" cy="20" r="1.8" fill="#756044"/>
+  <path d="M39 35h67" stroke="#ba9a6e" stroke-width="1.5"/>
+</svg>

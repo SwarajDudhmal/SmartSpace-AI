@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200" fill="none">
+  <defs>
+    <linearGradient id="frame" x1="0" y1="0" x2="160" y2="200" gradientUnits="userSpaceOnUse"><stop stop-color="#d8bd91"/><stop offset="1" stop-color="#a77c50"/></linearGradient>
+    <linearGradient id="linen" x1="25" y1="65" x2="136" y2="190" gradientUnits="userSpaceOnUse"><stop stop-color="#fffef8"/><stop offset=".56" stop-color="#e8e6db"/><stop offset="1" stop-color="#d1d3c8"/></linearGradient>
+    <linearGradient id="duvet" x1="38" y1="95" x2="120" y2="183" gradientUnits="userSpaceOnUse"><stop stop-color="#adc0a8"/><stop offset="1" stop-color="#758d78"/></linearGradient>
+    <filter id="shadow" x="5" y="4" width="150" height="192" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="2"/></filter>
+  </defs>
+  <rect x="12" y="8" width="136" height="184" rx="13" fill="#314132" opacity=".18" filter="url(#shadow)"/>
+  <rect x="9" y="6" width="142" height="188" rx="13" fill="url(#frame)" stroke="#8e6847" stroke-width="2"/>
+  <rect x="16" y="13" width="128" height="174" rx="10" fill="url(#linen)" stroke="#fff" stroke-opacity=".8"/>
+  <rect x="19" y="18" width="122" height="40" rx="8" fill="#ede9dd" stroke="#c9c5b9"/>
+  <rect x="25" y="23" width="51" height="27" rx="8" fill="#fffefa" stroke="#d9d6cb"/>
+  <rect x="84" y="23" width="51" height="27" rx="8" fill="#fffefa" stroke="#d9d6cb"/>
+  <path d="M32 34c10-6 24-6 36 0M91 34c10-6 24-6 36 0" stroke="#e2dfd5" stroke-width="2" stroke-linecap="round"/>
+  <path d="M20 65c17 7 37 9 60 7 23-2 43-1 61 7v89c-19 13-41 18-65 15-22-2-41-1-56 7V65Z" fill="url(#duvet)" stroke="#718673" stroke-width="1.4"/>
+  <path d="M24 82c25 8 56 11 111 3M23 105c27 7 61 10 112 3M22 130c31 6 70 8 115 2M21 154c36 5 75 6 116 1" stroke="#d8e1d2" stroke-opacity=".62" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M35 70c8 6 13 12 15 19M68 75l5 20m30-17-4 18m21-12-9 16" stroke="#e3e9de" stroke-opacity=".5" stroke-width="1.2" stroke-linecap="round"/>
+  <rect x="14" y="5" width="132" height="8" rx="4" fill="#b58b5e" stroke="#8e6847"/>
+</svg>

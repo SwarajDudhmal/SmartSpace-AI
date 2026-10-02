@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="View and resume your saved SmartSpace interior designs.">
+  <title>My Projects · SmartSpace AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='20260928-auth-wizard') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='dist/smartspace-frontend.css', v='20260929-v2') }}">
+</head>
+<body class="site-page page-projects">
+  {% include "_site_header.html" %}
+  <main id="projects-dashboard-root"></main>
+  {% include "_site_footer.html" %}
+  <script type="module" src="{{ url_for('static', filename='dist/smartspace-frontend.js', v='20260929-v2') }}"></script>
+</body>
+</html>

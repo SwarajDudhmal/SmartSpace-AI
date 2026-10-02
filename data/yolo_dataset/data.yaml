@@ -1,0 +1,20 @@
+# SmartSpace AI - Interior Object Detection Dataset
+# 10 Specialized Interior Object Classes
+
+path: .
+train: images/train
+val: images/val
+test: images/test
+
+# Classes
+names:
+  0: bed
+  1: sofa
+  2: chair
+  3: table
+  4: wardrobe
+  5: desk
+  6: tv
+  7: cabinet
+  8: door
+  9: window

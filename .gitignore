@@ -1,0 +1,106 @@
+# ===========================================================================
+# SmartSpace AI — .gitignore
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+# NOTE: static/dist/ is the Vite build output consumed by Flask templates.
+# Do NOT add it here — rebuild with: cd frontend && pnpm run build
+build/
+
+# Virtual environments
+venv/
+.venv/
+.venv-*/
+env/
+
+# Pytest / coverage
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Environment variables
+.env
+
+# ---------------------------------------------------------------------------
+# Node / Frontend
+# ---------------------------------------------------------------------------
+node_modules/
+.pnpm-store/
+frontend/node_modules/
+
+# ---------------------------------------------------------------------------
+# Model weights & training artifacts (large binaries)
+# ---------------------------------------------------------------------------
+data/models/*.pt
+data/models/*.onnx
+data/models/*.h5
+data/models/*.tflite
+data/models/*.npz
+data/models/*.keras
+data/models/ultralytics/
+Ultralytics/
+*.ckpt
+*.ckpt.*
+checkpoints/
+runs/
+
+# ---------------------------------------------------------------------------
+# Database & session secrets
+# ---------------------------------------------------------------------------
+data/*.sqlite3
+data/*.sqlite3-shm
+data/*.sqlite3-wal
+database/data/*.sqlite3
+database/data/*.sqlite3-shm
+database/data/*.sqlite3-wal
+data/.session_secret
+
+# ---------------------------------------------------------------------------
+# Uploaded / generated / temporary
+# ---------------------------------------------------------------------------
+uploads/
+instance/
+tmp/
+output/
+
+# ---------------------------------------------------------------------------
+# OS files
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ---------------------------------------------------------------------------
+# IDE / editor
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+
+# ---------------------------------------------------------------------------
+# Logs
+# ---------------------------------------------------------------------------
+*.log
+
+# Local development files excluded from public uploads
+.env
+.env.*
+!.env.example
+!.env.sample
+__pycache__/
+*.py[cod]
+.venv*/
+node_modules/
+.pnpm-store/
+.agent/
+.agents/
+.gemini/
+.gsd/
+.presentation-build/
+*.log

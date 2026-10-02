@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 110" fill="none">
+  <defs><linearGradient id="wood" x1="7" y1="4" x2="153" y2="107" gradientUnits="userSpaceOnUse"><stop stop-color="#dbba8a"/><stop offset=".48" stop-color="#c79c68"/><stop offset="1" stop-color="#a87a4c"/></linearGradient></defs>
+  <rect x="8" y="7" width="144" height="96" rx="17" fill="#645039" opacity=".18"/>
+  <rect x="5" y="4" width="150" height="98" rx="17" fill="url(#wood)" stroke="#8b633c" stroke-width="2"/>
+  <rect x="11" y="10" width="138" height="86" rx="13" stroke="#edcf9f" stroke-opacity=".8" stroke-width="1.5"/>
+  <path d="M20 28c20-9 40 8 62 0s38-5 59 1M18 44c18-8 41 7 62 0s40-4 62 0M18 71c22-8 42 7 63 0s39-4 60 0M21 85c20-6 38 5 57 0 24-7 43-4 64 1" stroke="#956b42" stroke-opacity=".27" stroke-width="2" stroke-linecap="round"/>
+  <path d="M42 14c3 9 3 17 0 24m78 28c-5 9-5 16-1 22" stroke="#f2d8aa" stroke-opacity=".46" stroke-width="1.4" stroke-linecap="round"/>
+  <ellipse cx="91" cy="52" rx="5" ry="2.5" fill="#936d49" opacity=".32"/>
+  <circle cx="49" cy="66" r="1.8" fill="#8d6541" opacity=".35"/>
+</svg>

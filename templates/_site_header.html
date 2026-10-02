@@ -1,0 +1,26 @@
+<header class="site-nav">
+  <a href="/" class="brand-logo" aria-label="SmartSpace AI home">
+    <svg class="logo-spark" viewBox="0 0 40 40" role="img" aria-label="SmartSpace geometric floorplan logo">
+      <path d="M9 10.5 20 5l11 5.5v19L20 35 9 29.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M9.5 18h9v11M30.5 22H22v12M20 5v9h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="m25.8 14.8 1.1 2.4 2.5 1.1-2.5 1.1-1.1 2.5-1.1-2.5-2.5-1.1 2.5-1.1z" fill="currentColor"/>
+    </svg>
+    <span class="brand-text">SmartSpace <span>AI</span></span>
+  </a>
+
+  <nav class="primary-nav" aria-label="Main navigation">
+    <a href="/" class="{{ 'active' if page_key == 'home' else '' }}">Overview</a>
+    <a href="/#styles">Styles</a>
+    <a href="/#how-it-works">How it works</a>
+    <a href="/studio" class="{{ 'active' if page_key == 'studio' else '' }}">Studio</a>
+    {% if session.get('user_id') %}
+    <a href="/projects" class="{{ 'active' if page_key == 'projects' else '' }}">My Projects</a>
+    {% else %}
+    <a href="/login">Sign in</a>
+    {% endif %}
+  </nav>
+
+  <a href="{{ url_for('views.create_project_page') }}" class="nav-cta" id="nav-new-design-btn">
+    New design <span aria-hidden="true">→</span>
+  </a>
+</header>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" fill="none">
+  <defs>
+    <linearGradient id="upholstery" x1="0" y1="0" x2="220" y2="100" gradientUnits="userSpaceOnUse"><stop stop-color="#d9d0bd"/><stop offset=".52" stop-color="#c6baa5"/><stop offset="1" stop-color="#a99d89"/></linearGradient>
+    <linearGradient id="seat" x1="22" y1="32" x2="197" y2="81" gradientUnits="userSpaceOnUse"><stop stop-color="#f0eade"/><stop offset="1" stop-color="#d1c7b6"/></linearGradient>
+  </defs>
+  <rect x="4" y="8" width="212" height="84" rx="20" fill="#8d8374" opacity=".22"/>
+  <rect x="6" y="7" width="208" height="86" rx="19" fill="url(#upholstery)" stroke="#817766" stroke-width="2"/>
+  <rect x="17" y="12" width="186" height="25" rx="11" fill="#a89d8b" stroke="#908574" stroke-width="1.4"/>
+  <path d="M76 14v20m68-20v20" stroke="#857b6c" stroke-opacity=".8" stroke-width="1.4"/>
+  <rect x="17" y="40" width="55" height="44" rx="11" fill="url(#seat)" stroke="#a69b88"/>
+  <rect x="82" y="40" width="55" height="44" rx="11" fill="url(#seat)" stroke="#a69b88"/>
+  <rect x="147" y="40" width="55" height="44" rx="11" fill="url(#seat)" stroke="#a69b88"/>
+  <path d="M23 47c12-4 28-4 42 0m23 0c12-4 28-4 42 0m23 0c12-4 28-4 42 0" stroke="#fffaf0" stroke-opacity=".74" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M9 29c6-9 17-13 27-12v60c-10 1-21-3-27-12V29Zm202 0c-6-9-17-13-27-12v60c10 1 21-3 27-12V29Z" fill="#d4c9b6" stroke="#857a69" stroke-width="1.6"/>
+  <path d="M23 88v5m174-5v5" stroke="#655a4c" stroke-width="4" stroke-linecap="round"/>
+  <path d="M51 55h21m10 0h55m9 0h55" stroke="#b6aa97" stroke-opacity=".6" stroke-width="1" stroke-dasharray="2 4"/>
+</svg>

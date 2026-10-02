@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page not found · SmartSpace AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='20260928-consistency') }}">
+</head>
+<body class="site-page page-not-found">
+  {% include "_site_header.html" %}
+  <main class="not-found-card">
+    <span class="not-found-code">404 · PAGE NOT FOUND</span>
+    <h1>This space is still being designed.</h1>
+    <p>The page you’re looking for may have moved. Head back to the overview or start a new room design.</p>
+    <div class="not-found-actions">
+      <a href="/" class="nav-cta">Back to overview <span aria-hidden="true">→</span></a>
+      <a href="/create-project">Start a new design</a>
+    </div>
+  </main>
+  {% include "_site_footer.html" %}
+</body>
+</html>
+

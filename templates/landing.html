@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plan a more thoughtful home with SmartSpace AI. Explore room ideas, optimize furniture layouts and design around your budget.">
+
+    <title>SmartSpace AI | Interior Design</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css', v='20260928-dual-engine-modal') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dist/smartspace-frontend.css', v='20260929-v2') }}">
+</head>
+
+<body class="site-page page-home">
+
+    <!-- =====================================================
+         NAVIGATION
+    ====================================================== -->
+
+    {% include "_site_header.html" %}
+
+
+    <!-- =====================================================
+         HERO SECTION
+    ====================================================== -->
+
+    <section class="interior-hero">
+
+        <div class="hero-left">
+
+            <div class="hero-small-label">
+                ✦ AI-POWERED INTERIOR DESIGN
+            </div>
+
+            <h1>
+                Design a space
+                <br>
+                <em>you'll love</em>
+                to live in.
+            </h1>
+
+            <p class="hero-description">
+                Create beautiful, personalized interiors
+                with intelligent recommendations tailored
+                to your room, style and budget.
+            </p>
+
+            <div class="hero-buttons">
+
+                <a href="{{ url_for('views.create_project_page') }}"
+                   class="design-button"
+                   id="hero-start-design-btn">
+                    Start Your Design
+                    <span>→</span>
+                </a>
+
+                <a href="#styles"
+                   class="explore-button">
+                    Explore Styles
+                </a>
+
+            </div>
+
+            <div class="hero-features">
+
+                <div>
+                    <strong>01</strong>
+                    <span>
+                        Personalized
+                        Designs
+                    </span>
+                </div>
+
+                <div>
+                    <strong>02</strong>
+                    <span>
+                        Smart Furniture
+                        Placement
+                    </span>
+                </div>
+
+                <div>
+                    <strong>03</strong>
+                    <span>
+                        Budget
+                        Optimization
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- HERO ROOM -->
+
+        <div class="hero-room-area">
+
+            <div class="room-glow"></div>
+
+            <div class="interior-room">
+                <img class="interior-room-photo"
+                     src="{{ url_for('static', filename='images/interior-hero.jpg') }}"
+                     alt="Bright neutral living room with a cream sofa and natural wood accents"
+                     fetchpriority="high">
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         STYLE SECTION
+    ====================================================== -->
+
+    <section id="styles"
+             class="styles-section">
+
+        <div class="section-heading">
+
+            <div>
+
+                <span>
+                    FIND YOUR STYLE
+                </span>
+
+                <h2>
+                    Spaces made
+                    <em>for you.</em>
+                </h2>
+
+            </div>
+
+            <p>
+                Choose a style and let SmartSpace
+                create a design around your
+                preferences.
+            </p>
+
+        </div>
+
+
+        <div class="style-grid showcase-grid">
+            {% for preset in showcase_presets %}
+            <article class="style-item showcase-item {{ 'style-large' if loop.first else '' }}">
+                <div class="style-image showcase-image">
+                    <img class="style-photo" src="{{ preset.thumbnail }}" alt="{{ preset.name }} interior design photograph" loading="lazy" decoding="async">
+                    <div class="showcase-image-tags"><span>{{ preset.style|title }}</span><span>{{ preset.score|round|int }}% ergonomic score</span></div>
+                </div>
+                <div class="style-info showcase-info">
+                    <div><h3>{{ preset.name }}</h3><span>{{ preset.description }}</span></div>
+                    <div class="showcase-metrics">
+                        <span><b>Room</b>{{ '%.1f'|format(preset.length_m / 0.3048) }} × {{ '%.1f'|format(preset.width_m / 0.3048) }} ft <small>({{ '%.2f'|format(preset.length_m) }} × {{ '%.2f'|format(preset.width_m) }} m)</small></span>
+                        <span><b>Budget</b>₹{{ '{:,.0f}'.format(preset.budget) }}</span>
+                        <span><b>A* reachable</b>{{ (preset.circulation * 100)|round|int }}%</span>
+                    </div>
+                    <a class="showcase-load-link" href="/studio?preset={{ preset.id }}">Load into Studio <span aria-hidden="true">→</span></a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+
+
+    <!-- =====================================================
+         HOW IT WORKS
+    ====================================================== -->
+
+    <section id="how-it-works"
+             class="how-section">
+
+        <div class="center-heading">
+
+            <span>
+                HOW IT WORKS
+            </span>
+
+            <h2>
+                From your room
+                <em>to your dream space.</em>
+            </h2>
+
+        </div>
+
+
+        <div class="process-grid">
+
+            <!-- STEP 1 -->
+
+            <div class="process-card">
+
+                <div class="process-number">
+                    01
+                </div>
+
+                <div class="process-icon">
+                    ↑
+                </div>
+
+                <h3>
+                    Tell us about your space
+                </h3>
+
+                <p>
+                    Upload your room image,
+                    dimensions and tell us what
+                    kind of space you want.
+                </p>
+
+            </div>
+
+
+            <!-- STEP 2 -->
+
+            <div class="process-card">
+
+                <div class="process-number">
+                    02
+                </div>
+
+                <div class="process-icon">
+                    ✦
+                </div>
+
+                <h3>
+                    AI understands your room
+                </h3>
+
+                <p>
+                    Computer vision identifies
+                    furniture and available
+                    space.
+                </p>
+
+            </div>
+
+
+            <!-- STEP 3 -->
+
+            <div class="process-card">
+
+                <div class="process-number">
+                    03
+                </div>
+
+                <div class="process-icon">
+                    ◇
+                </div>
+
+                <h3>
+                    Create your design
+                </h3>
+
+                <p>
+                    AI optimizes furniture
+                    placement according to
+                    your preferences.
+                </p>
+
+            </div>
+
+
+            <!-- STEP 4 -->
+
+            <div class="process-card">
+
+                <div class="process-number">
+                    04
+                </div>
+
+                <div class="process-icon">
+                    ✓
+                </div>
+
+                <h3>
+                    Refine and visualize
+                </h3>
+
+                <p>
+                    Explore your design,
+                    modify furniture and
+                    check the estimated cost.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         WHAT-IF AI SIMULATOR
+    ====================================================== -->
+
+    <section id="what-if"
+             class="what-if-section">
+
+        <div class="what-if-header">
+
+            <span>
+                WHAT-IF AI SIMULATOR
+            </span>
+
+            <h2>
+                Design before
+                <em>you decide.</em>
+            </h2>
+
+            <p>
+                Explore furniture changes before applying them.
+                SmartSpace predicts circulation, space utilization,
+                collision risk and budget impact.
+            </p>
+
+        </div>
+
+
+        <div class="what-if-panel">
+
+            <!-- DB-backed top-down CAD preview -->
+            <div class="what-if-room showcase-cad-room">
+                <canvas id="homepageLayoutCanvas" class="homepage-plan-canvas" aria-label="Top-down furniture layout generated from the selected room preset"></canvas>
+                <div class="cad-room-badge">CURATED ROOM PLAN · SAT + A* CHECKS</div>
+                {% if showcase_presets %}
+                <div class="cad-room-caption">{{ showcase_presets[0].name }} · {{ (showcase_presets[0].circulation * 100)|round|int }}% reachable</div>
+                {% endif %}
+            </div>
+
+            <!-- RESULTS -->
+
+            <div class="simulation-results">
+
+                <span class="result-label">
+                    CURRENT VERIFIED PRESET
+                </span>
+
+                <h3>
+                    {{ showcase_presets[0].name if showcase_presets else 'Room layout overview' }}
+                </h3>
+
+                <p class="simulation-description">
+                    These measurements come from the saved floorplan geometry. Open it in Studio to edit the layout and recalculate them.
+                </p>
+
+
+                <div class="result-item">
+
+                    <span>
+                        A* reachability
+                    </span>
+
+                    <strong>
+                        {{ (showcase_presets[0].circulation * 100)|round|int }}%
+                    </strong>
+
+                </div>
+
+
+                <div class="result-item">
+
+                    <span>
+                        Ergonomic layout score
+                    </span>
+
+                    <strong>
+                        {{ showcase_presets[0].score|round|int }}%
+                    </strong>
+
+                </div>
+
+
+                <div class="result-item">
+
+                    <span>
+                        SAT collision pairs
+                    </span>
+
+                    <strong class="safe">
+                        {{ showcase_presets[0].collision_count }}
+                    </strong>
+
+                </div>
+
+
+                <div class="result-item">
+
+                    <span>
+                        Furniture estimate
+                    </span>
+
+                    <strong>
+                        ₹{{ "{:,.0f}".format(showcase_presets[0].estimated_cost) }} / ₹{{ "{:,.0f}".format(showcase_presets[0].budget) }}
+                    </strong>
+
+                </div>
+
+
+                <a href="{{ '/studio?preset=' ~ showcase_presets[0].id if showcase_presets else '/create-project' }}" class="simulation-button">
+                    Try a room layout <span>→</span>
+                </a>
+
+            </div>
+
+        </div>
+
+        <div id="homepage-layout-cards" class="smartspace-react-slot" data-layout-card-grid="featured"></div>
+
+    </section>
+
+
+    <!-- =====================================================
+         DAY / NIGHT LIGHTING SIMULATOR
+    ====================================================== -->
+
+    <section id="day-night"
+             class="day-night-section">
+
+        <div class="day-night-header">
+
+            <span>
+                LIGHTING INTELLIGENCE
+            </span>
+
+            <h2>
+                See your room in
+                <em>every light.</em>
+            </h2>
+
+            <p>
+                SmartSpace simulates how your interior changes
+                throughout the day and helps you understand
+                natural and artificial lighting.
+            </p>
+
+        </div>
+
+
+        <div class="day-night-panel">
+
+            <!-- Local interior photography with interactive lighting filters -->
+            <div class="lighting-room lighting-morning lighting-photo-room">
+                {% if showcase_presets %}
+                <img class="lighting-photo" src="{{ showcase_presets[0].thumbnail }}" alt="{{ showcase_presets[0].name }} under changing light">
+                {% else %}
+                <img class="lighting-photo" src="{{ url_for('static', filename='images/interior-hero.jpg') }}" alt="Interior room under changing light">
+                {% endif %}
+                <div class="lighting-overlay"></div>
+                <div class="lighting-time">08:00 AM</div>
+            </div>
+
+            <!-- LIGHTING CONTROLS -->
+
+            <div class="lighting-controls">
+
+                <span class="control-label">
+                    AI LIGHTING SIMULATION
+                </span>
+
+                <h3>
+                    Fresh morning light
+                </h3>
+
+                <p>
+                    Preview how your room looks under
+                    different lighting conditions.
+                </p>
+
+
+                <div class="time-options">
+
+                    <button class="time-option active"
+                            data-time="morning">
+
+                        <strong>☀</strong>
+
+                        <span>
+                            Morning
+                        </span>
+
+                    </button>
+
+
+                    <button class="time-option"
+                            data-time="evening">
+
+                        <strong>◐</strong>
+
+                        <span>
+                            Evening
+                        </span>
+
+                    </button>
+
+
+                    <button class="time-option"
+                            data-time="night">
+
+                        <strong>☾</strong>
+
+                        <span>
+                            Night
+                        </span>
+
+                    </button>
+
+                </div>
+
+
+                <div class="lighting-result">
+
+                    <div>
+                        <span>
+                            Natural Light
+                        </span>
+
+                        <strong>
+                            64%
+                        </strong>
+                    </div>
+
+
+                    <div>
+                        <span>
+                            Artificial Light
+                        </span>
+
+                        <strong>
+                            36%
+                        </strong>
+                    </div>
+
+
+                    <div>
+                        <span>
+                            Ambience
+                        </span>
+
+                        <strong>
+                            Warm
+                        </strong>
+                    </div>
+
+                </div>
+
+
+                <a href="{{ url_for('views.create_project_page') }}" class="lighting-button">
+                    Plan your room lighting <span>→</span>
+                </a>
+
+            </div>
+
+        </div>
+
+        <div id="lighting-layout-cards" class="smartspace-react-slot" data-layout-card-grid="lighting"></div>
+
+    </section>
+
+
+    <!-- =====================================================
+         AI SECTION
+    ====================================================== -->
+
+    <section id="about"
+             class="ai-section">
+
+        <div class="ai-section-content">
+
+            <span>
+                DESIGN INTELLIGENCE
+            </span>
+
+            <h2>
+                Beautiful design,
+                <br>
+                backed by <em>AI.</em>
+            </h2>
+
+            <p>
+                SmartSpace combines computer vision,
+                reinforcement learning and intelligent
+                path planning to help create practical
+                interior layouts.
+            </p>
+
+            <a href="{{ url_for('views.create_project_page') }}"
+               class="design-button">
+                Create My Space →
+            </a>
+
+        </div>
+
+
+        <div class="ai-tech">
+
+            <div class="tech-box">
+
+                <strong>
+                    YOLO
+                </strong>
+
+                <span>
+                    Furniture Detection
+                </span>
+
+            </div>
+
+
+            <div class="tech-box">
+
+                <strong>
+                    DQN
+                </strong>
+
+                <span>
+                    Layout Optimization
+                </span>
+
+            </div>
+
+
+            <div class="tech-box">
+
+                <strong>
+                    A*
+                </strong>
+
+                <span>
+                    Space &amp; Path Planning
+                </span>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    {% include "_site_footer.html" %}
+
+
+    <!-- =====================================================
+         LIGHTING JAVASCRIPT
+    ====================================================== -->
+
+    <script>window.SMARTSPACE_SHOWCASE_PRESETS = {{ showcase_presets|tojson }};</script>
+    <script defer src="{{ url_for('static', filename='js/furniture_renderer.js', v='20260928-shared-furniture-v1') }}"></script>
+    <script defer src="{{ url_for('static', filename='js/home-showcase.js', v='20260928-realistic-plan-v3') }}"></script>
+    <script defer src="{{ url_for('static', filename='js/lighting.js', v='20260928-database-gallery') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='dist/smartspace-frontend.js', v='20260929-v2') }}"></script>
+
+</body>
+
+</html>

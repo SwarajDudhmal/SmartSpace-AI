@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1180" viewBox="0 0 1500 1180" role="img" aria-labelledby="title desc">
+  <title id="title">SmartSpace AI runtime sequence</title>
+  <desc id="desc">Sequence of browser, Flask, optional vision detector, and layout engine interactions from project creation through room evaluation, manual editing, optimization animation, and exports.</desc>
+  <defs>
+    <marker id="arr" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M1 1 L10 5.5 L1 10 z" fill="#526b87"/></marker>
+    <marker id="arrOrange" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M1 1 L10 5.5 L1 10 z" fill="#cf8a2e"/></marker>
+    <style>
+      .bg{fill:#f4f7fb}.heading{font:700 32px 'Segoe UI',Arial,sans-serif;fill:#14253b}.sub{font:400 16px 'Segoe UI',Arial,sans-serif;fill:#53677f}
+      .actor{fill:#eaf2fc;stroke:#7898bc;stroke-width:2;rx:13}.actor2{fill:#eaf8f5;stroke:#62a894;stroke-width:2;rx:13}.actor3{fill:#fff5e7;stroke:#d59a47;stroke-width:2;rx:13}.actor4{fill:#f2efff;stroke:#8974c6;stroke-width:2;rx:13}
+      .at{font:700 15px 'Segoe UI',Arial,sans-serif;fill:#213850}.as{font:400 12px 'Segoe UI',Arial,sans-serif;fill:#587089}
+      .life{stroke:#c7d3e0;stroke-width:2;stroke-dasharray:6 8}.call{stroke:#526b87;stroke-width:2.5;fill:none;marker-end:url(#arr)}.reply{stroke:#71869e;stroke-width:2;stroke-dasharray:7 5;fill:none;marker-end:url(#arr)}.opt{stroke:#cf8a2e;stroke-width:2.5;stroke-dasharray:7 6;fill:none;marker-end:url(#arrOrange)}
+      .lbl{font:600 13px 'Segoe UI',Arial,sans-serif;fill:#334a64}.sm{font:400 12px 'Segoe UI',Arial,sans-serif;fill:#61758b}.section{font:700 14px 'Segoe UI',Arial,sans-serif;fill:#5b7189;letter-spacing:.7px}
+      .note{fill:#fff;stroke:#d9e3ef;stroke-width:1.5;rx:10}.noteOrange{fill:#fff8ed;stroke:#e0b46f;stroke-width:1.5;rx:10}.num{fill:#3972a8}.numtxt{font:700 12px 'Segoe UI',Arial,sans-serif;fill:white}
+    </style>
+  </defs>
+  <rect class="bg" width="1500" height="1180"/>
+  <text class="heading" x="50" y="52">SmartSpace AI | Runtime sequence</text>
+  <text class="sub" x="50" y="81">The user action, API call, algorithm work, and browser update in order</text>
+
+  <rect class="actor" x="54" y="108" width="220" height="62"/><text class="at" x="79" y="136">User</text><text class="as" x="79" y="155">Form and studio actions</text>
+  <rect class="actor" x="354" y="108" width="250" height="62"/><text class="at" x="379" y="136">Browser UI</text><text class="as" x="379" y="155">Canvas · app.js · storage</text>
+  <rect class="actor2" x="684" y="108" width="245" height="62"/><text class="at" x="709" y="136">Flask API</text><text class="as" x="709" y="155">Routes in app.py</text>
+  <rect class="actor3" x="1009" y="108" width="200" height="62"/><text class="at" x="1034" y="136">Vision module</text><text class="as" x="1034" y="155">YOLO · optional</text>
+  <rect class="actor4" x="1289" y="108" width="170" height="62"/><text class="at" x="1310" y="136">Layout engine</text><text class="as" x="1310" y="155">Env · A* · DQN</text>
+  <line class="life" x1="164" y1="170" x2="164" y2="1100"/><line class="life" x1="479" y1="170" x2="479" y2="1100"/><line class="life" x1="806" y1="170" x2="806" y2="1100"/><line class="life" x1="1109" y1="170" x2="1109" y2="1100"/><line class="life" x1="1374" y1="170" x2="1374" y2="1100"/>
+
+  <text class="section" x="54" y="204">A · PROJECT AND ROOM SETUP</text>
+  <circle class="num" cx="70" cy="235" r="13"/><text class="numtxt" x="66" y="239">1</text>
+  <path class="call" d="M164 235 H800"/><text class="lbl" x="410" y="226">GET page / load project form</text>
+  <circle class="num" cx="70" cy="276" r="13"/><text class="numtxt" x="66" y="280">2</text>
+  <path class="call" d="M164 276 H475"/><text class="lbl" x="250" y="267">Create project</text>
+  <path class="call" d="M479 294 H802"/><text class="lbl" x="574" y="287">POST /api/projects</text>
+  <path class="reply" d="M802 311 H479"/><text class="sm" x="580" y="307">project JSON · in-memory record</text>
+  <path class="call" d="M479 329 H164"/><text class="sm" x="226" y="324">save project in localStorage / sessionStorage</text>
+
+  <circle class="num" cx="70" cy="375" r="13"/><text class="numtxt" x="66" y="379">3</text>
+  <path class="call" d="M164 375 H479"/><text class="lbl" x="230" y="366">Submit room details + optional photo</text>
+  <path class="call" d="M479 396 H802"/><text class="lbl" x="579" y="389">POST /api/rooms · multipart form</text>
+  <rect class="note" x="686" y="415" width="242" height="74"/><text class="sm" x="703" y="439">Convert feet → meters;</text><text class="sm" x="703" y="459">set room/opening assumptions</text><text class="sm" x="703" y="479">and prepare room state.</text>
+  <path class="opt" d="M806 404 H1106"/><text class="sm" x="891" y="399">if photo supplied</text>
+  <rect class="noteOrange" x="1009" y="424" width="200" height="90"/><text class="sm" x="1025" y="449">Weights available?</text><text class="sm" x="1025" y="470">Detect + map objects</text><text class="sm" x="1025" y="491">else: no detections</text>
+  <path class="reply" d="M1106 526 H806"/><text class="sm" x="891" y="521">detected furniture (when available)</text>
+  <rect class="note" x="686" y="536" width="242" height="58"/><text class="sm" x="703" y="559">No detected furniture → room-type</text><text class="sm" x="703" y="579">starter layout; fill sizes and prices</text>
+  <path class="reply" d="M802 612 H479"/><text class="lbl" x="568" y="606">Return room JSON</text>
+  <path class="call" d="M479 633 H164"/><text class="sm" x="223" y="628">save room; navigate to /studio</text>
+
+  <text class="section" x="54" y="679">B · STUDIO STARTUP AND EDITING</text>
+  <circle class="num" cx="70" cy="711" r="13"/><text class="numtxt" x="66" y="715">4</text>
+  <path class="call" d="M164 711 H479"/><text class="lbl" x="238" y="702">Studio loads room from browser storage</text>
+  <path class="call" d="M479 735 H802"/><text class="lbl" x="558" y="728">GET /api/system-status</text>
+  <path class="reply" d="M802 753 H479"/><text class="sm" x="571" y="749">YOLO / DQN loaded status</text>
+  <path class="call" d="M479 776 H802"/><text class="lbl" x="558" y="769">POST /api/evaluate · initial layout</text>
+  <path class="call" d="M806 794 H1370"/><text class="lbl" x="1012" y="787">InteriorEnv → reward + metrics; A* → paths</text>
+  <path class="reply" d="M1370 812 H806"/><text class="sm" x="1022" y="808">metrics and walking paths</text>
+  <path class="reply" d="M802 829 H479"/><text class="sm" x="570" y="825">update score, collision/cost cards, path overlay</text>
+
+  <circle class="num" cx="70" cy="869" r="13"/><text class="numtxt" x="66" y="873">5</text>
+  <path class="call" d="M164 869 H479"/><text class="lbl" x="238" y="860">Drag / rotate / add / remove furniture</text>
+  <rect class="note" x="354" y="887" width="250" height="58"/><text class="sm" x="369" y="910">Canvas redraws during drag.</text><text class="sm" x="369" y="930">On release, browser saves layout.</text>
+  <path class="call" d="M479 961 H802"/><text class="lbl" x="558" y="954">POST /api/evaluate after edit completes</text>
+  <path class="call" d="M806 979 H1370"/><text class="lbl" x="1008" y="972">Recompute collision, A*, reward and score</text>
+  <path class="reply" d="M1370 997 H806"/><text class="sm" x="1018" y="993">return updated metrics / paths</text>
+  <path class="reply" d="M802 1015 H479"/><text class="sm" x="566" y="1011">refresh UI; sync 3D view when active</text>
+
+  <text class="section" x="54" y="1051">C · OPTIMIZE AND EXPORT</text>
+  <circle class="num" cx="70" cy="1081" r="13"/><text class="numtxt" x="66" y="1085">6</text>
+  <path class="call" d="M164 1081 H802"/><text class="lbl" x="394" y="1073">Click Optimize → POST /api/optimize</text>
+  <path class="call" d="M806 1099 H1370"/><text class="lbl" x="1021" y="1093">Score candidate actions; choose best improvement</text>
+  <rect class="noteOrange" x="780" y="1110" width="410" height="53"/><text class="sm" x="797" y="1132">Server returns full trajectory first; browser then animates</text><text class="sm" x="797" y="1152">at 85 ms/frame and saves final layout. Not streamed.</text>
+  <text class="sm" x="1213" y="1129">TXT export uses API.</text><text class="sm" x="1213" y="1149">PNG export is local.</text>
+</svg>

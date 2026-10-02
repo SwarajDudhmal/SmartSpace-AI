@@ -1,0 +1,3 @@
+# Photo inference runtime. Install with the same Python used to launch Flask.
+-r requirements.txt
+ultralytics>=8.4.166,<9

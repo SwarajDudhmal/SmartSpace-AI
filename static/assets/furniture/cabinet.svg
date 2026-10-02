@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 78" fill="none">
+  <defs><linearGradient id="cabinet" x1="4" y1="3" x2="146" y2="75" gradientUnits="userSpaceOnUse"><stop stop-color="#d0b696"/><stop offset=".54" stop-color="#b0906c"/><stop offset="1" stop-color="#907052"/></linearGradient></defs>
+  <rect x="5" y="7" width="140" height="64" rx="10" fill="#514332" opacity=".18"/>
+  <rect x="4" y="4" width="142" height="66" rx="9" fill="url(#cabinet)" stroke="#765b41" stroke-width="2"/>
+  <rect x="11" y="10" width="128" height="54" rx="6" stroke="#ead8bd" stroke-opacity=".75" stroke-width="1.5"/>
+  <rect x="17" y="15" width="54" height="21" rx="4" fill="#c5a881" stroke="#927351"/>
+  <rect x="79" y="15" width="54" height="21" rx="4" fill="#c5a881" stroke="#927351"/>
+  <rect x="17" y="40" width="54" height="18" rx="4" fill="#bea07a" stroke="#927351"/>
+  <rect x="79" y="40" width="54" height="18" rx="4" fill="#bea07a" stroke="#927351"/>
+  <path d="M38 25h11m41 0h11m-63 24h11m41 0h11" stroke="#66503a" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M22 13h44m18 0h44" stroke="#f5e7cf" stroke-opacity=".46" stroke-width="1.4"/>
+</svg>

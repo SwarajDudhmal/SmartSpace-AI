@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Arrange furniture, check circulation and refine a room design with SmartSpace AI.">
+  <title>Design Studio · SmartSpace AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='20260930-furniture-grid') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='dist/smartspace-frontend.css', v='20260930-furniture-grid') }}">
+
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body class="site-page page-studio">
+  {% include "_site_header.html" %}
+
+  <section class="studio-banner" aria-labelledby="studioPageTitle">
+    <div class="studio-banner-copy">
+      <p class="studio-eyebrow">Workspace <span>/</span> Interior design studio</p>
+      <h1 id="studioPageTitle">Shape the room<br><em>before it exists.</em></h1>
+      <p class="studio-intro-copy">Place furniture, explore the floor plan and refine a design that works for your room.</p>
+    </div>
+    <div class="studio-mode-badges" aria-label="Engine status">
+      <span id="visionHeaderBadge" class="class-chip"><span aria-hidden="true">◉</span> Vision: checking</span>
+      <span id="optimizerHeaderBadge" class="class-chip"><span aria-hidden="true">✦</span> Optimizer: checking</span>
+    </div>
+  </section>
+
+  <main class="main-wrapper">
+    <div class="studio-workspace-container">
+      <!-- Consolidated Top Status Bar above the 2D CAD canvas -->
+      <header class="glass-panel studio-top-status-bar" aria-label="Studio status and AI controls">
+        <div class="status-bar-primary">
+          <div class="status-room-group">
+            <h2 id="studioRoomName" class="status-room-name">Your room</h2>
+            <span id="studioRoomMeta" class="status-room-meta">Room dimensions and budget</span>
+          </div>
+
+          <!-- Unified Layout Health badge showing overall ergonomic percentage -->
+          <div class="layout-health-badge" id="layoutHealthBadge" title="Overall layout health">
+            <span class="health-badge-label">Layout Health</span>
+            <strong id="metricScore" class="metric-value emerald">--</strong>
+            <span id="ergonomicsStatus" class="health-badge-status">Circulation checked</span>
+          </div>
+
+          <!-- Total furniture cost vs. budget as a single inline metric -->
+          <div class="status-inline-budget" title="Furniture estimate vs room budget">
+            <span class="status-budget-label">Cost / Budget:</span>
+            <strong id="budgetRatioText" class="status-budget-val">₹0 / ₹20,000</strong>
+            <span id="metricCost" hidden>₹0</span>
+            <div class="budget-track-inline" aria-hidden="true"><div id="budgetProgressBar"></div></div>
+          </div>
+
+          <!-- A* Reachability & Collisions inline indicators -->
+          <div class="status-submetrics">
+            <span class="status-submetric">A* Path: <strong id="metricCirculation" class="cyan">--</strong></span>
+            <span class="status-submetric">Collisions: <strong id="metricCollisions" class="emerald">0</strong></span>
+          </div>
+        </div>
+
+        <div class="status-bar-controls">
+          <span id="optimizerModelBadge" class="metric-sub studio-model-status" hidden></span>
+          <div id="studio-budget-react-root" class="smartspace-budget-react-inline"></div>
+          <button type="button" id="openRecommendationsBtn" class="btn btn-secondary btn-sm">✧ Designs</button>
+          <button type="button" id="saveProjectBtn" class="btn btn-secondary btn-sm">Save</button>
+          <button id="dqnOptimizeBtn" class="btn btn-dqn btn-sm"><span>Optimize layout</span> <span aria-hidden="true">→</span></button>
+          <button type="button" id="toggleNotesBtn" class="btn btn-secondary btn-sm btn-insights" aria-expanded="false" aria-controls="notesSlideOverDrawer">✦ Design Insights</button>
+          <button id="exportSpecBtn" class="btn btn-secondary btn-sm" title="Download design spec">Export ↓</button>
+        </div>
+      </header>
+
+      <!-- Full-Width 2D CAD Canvas & 3D WebGL Viewport -->
+      <section class="glass-panel viewport-card studio-canvas-card" aria-label="Interactive room plan">
+        <div class="viewport-toolbar">
+          <div class="studio-view-heading">
+            <span class="studio-live-dot"></span>
+            <span class="studio-eyebrow">Live floor plan</span>
+          </div>
+          <div class="view-mode-toggles" role="group" aria-label="View mode">
+            <button class="view-mode-btn active" data-mode="2d" aria-pressed="true">▦ &nbsp; CAD</button>
+            <button class="view-mode-btn" data-mode="3d" aria-pressed="false">◇ &nbsp; 3D View</button>
+          </div>
+        </div>
+
+        <div class="canvas-tools studio-canvas-tools">
+          <button id="zoomInBtn" class="canvas-tool-btn" title="Zoom in" aria-label="Zoom in">＋</button>
+          <button id="zoomOutBtn" class="canvas-tool-btn" title="Zoom out" aria-label="Zoom out">−</button>
+          <button id="resetViewBtn" class="canvas-tool-btn" title="Fit room to view">Fit room</button>
+          <span class="studio-tool-divider" aria-hidden="true"></span>
+          <label class="toggle-label"><input type="checkbox" id="toggleWalkways" checked> A* paths</label>
+          <label class="toggle-label"><input type="checkbox" id="toggleClearances" checked> Clearances</label>
+        </div>
+
+        <div class="canvas-container">
+          <canvas id="floorplanCanvas" aria-label="Interactive 2D room plan"></canvas>
+          <div id="threejsContainer" aria-label="Interactive 3D room preview"></div>
+          <div id="threejsFallback" class="viewer-fallback" hidden>3D preview needs WebGL support and a network connection. Your 2D plan is ready to use.</div>
+        </div>
+
+        <div class="viewport-status">
+          <div id="actionLog" class="metric-sub">Drag furniture to adjust the plan, or optimize the layout.</div>
+          <button id="exportPngBtn" class="canvas-tool-btn">Export snapshot ↓</button>
+        </div>
+        <div class="studio-canvas-legend"><span><i class="legend-door"></i> Door</span><span><i class="legend-window"></i> Window</span><span>Drag to reposition · select to rotate</span></div>
+      </section>
+
+      <!-- The panel shell never scrolls; each item grid owns its scrolling. -->
+      <section class="glass-panel studio-furniture-panel overflow-hidden" aria-label="Room furniture and catalog">
+        <div class="studio-furniture-heading">
+          <div><p class="studio-eyebrow">Build your layout</p><h2>Furniture & room details</h2></div>
+          <button id="resetLayoutBtn" class="btn btn-secondary btn-sm">↺ &nbsp; Reset layout</button>
+        </div>
+        <div class="studio-tab-bar" role="tablist" aria-label="Furniture tools">
+          <button class="studio-tab-btn active" data-subtab="subtab-inventory" role="tab" aria-selected="true">Room furniture</button>
+          <button class="studio-tab-btn" data-subtab="subtab-catalog" role="tab" aria-selected="false">Add furniture</button>
+          <button class="studio-tab-btn" data-subtab="subtab-photo" role="tab" aria-selected="false">Room photo</button>
+        </div>
+
+        <div id="subtab-inventory" class="subtab-content" role="tabpanel">
+          <div class="panel-header"><span class="metric-sub">Select an item to edit · Drag it on the plan to move it</span></div>
+          <div id="inventoryList" class="min-h-0 min-w-0 overflow-hidden"></div>
+        </div>
+
+        <div id="subtab-catalog" class="subtab-content" role="tabpanel" hidden>
+          <div class="panel-header"><span id="catalogActionHint" class="metric-sub">Choose an item to add it to your plan</span><button id="cancelFurnitureSwap" type="button" hidden>Cancel swap</button></div>
+          <div class="catalog-grid">
+            <div class="catalog-item-card"><span class="catalog-name">Queen bed</span><span class="metric-sub">1.6 × 2.0 m · ₹12,000</span><button class="catalog-add-btn" data-type="bed" data-w="1.6" data-d="2.0" data-cost="12000" data-label="Queen Bed">＋ Add to room</button></div>
+            <div class="catalog-item-card"><span class="catalog-name">3-seater sofa</span><span class="metric-sub">2.1 × 0.9 m · ₹14,000</span><button class="catalog-add-btn" data-type="sofa" data-w="2.1" data-d="0.9" data-cost="14000" data-label="3-Seater Sofa">＋ Add to room</button></div>
+            <div class="catalog-item-card"><span class="catalog-name">Study desk</span><span class="metric-sub">1.3 × 0.65 m · ₹4,200</span><button class="catalog-add-btn" data-type="desk" data-w="1.3" data-d="0.65" data-cost="4200" data-label="Study Desk">＋ Add to room</button></div>
+            <div class="catalog-item-card"><span class="catalog-name">Desk chair</span><span class="metric-sub">0.6 × 0.6 m · ₹1,500</span><button class="catalog-add-btn" data-type="chair" data-w="0.6" data-d="0.6" data-cost="1500" data-label="Desk Chair">＋ Add to room</button></div>
+            <div class="catalog-item-card"><span class="catalog-name">Wardrobe</span><span class="metric-sub">1.5 × 0.6 m · ₹8,500</span><button class="catalog-add-btn" data-type="wardrobe" data-w="1.5" data-d="0.6" data-cost="8500" data-label="Wardrobe">＋ Add to room</button></div>
+            <div class="catalog-item-card"><span class="catalog-name">Coffee table</span><span class="metric-sub">1.2 × 0.7 m · ₹3,500</span><button class="catalog-add-btn" data-type="table" data-w="1.2" data-d="0.7" data-cost="3500" data-label="Coffee Table">＋ Add to room</button></div>
+            <div class="catalog-item-card"><span class="catalog-name">TV console</span><span class="metric-sub">1.2 × 0.15 m · ₹8,000</span><button class="catalog-add-btn" data-type="tv" data-w="1.2" data-d="0.15" data-cost="8000" data-label="55 TV Console">＋ Add to room</button></div>
+            <div class="catalog-item-card"><span class="catalog-name">Side cabinet</span><span class="metric-sub">1.0 × 0.45 m · ₹3,500</span><button class="catalog-add-btn" data-type="cabinet" data-w="1.0" data-d="0.45" data-cost="3500" data-label="Side Cabinet">＋ Add to room</button></div>
+          </div>
+        </div>
+
+        <div id="subtab-photo" class="subtab-content" role="tabpanel" hidden>
+          <div class="panel-header"><span class="metric-sub">Room photo analysis</span></div>
+          <div id="visionBoxWrapper" class="vision-preview"><img id="detectedThumbImg" src="/data/samples/sample_room.jpg" alt="Room photo preview"><span id="visionPreviewStatus" class="metric-sub">Checking vision model…</span></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Collapsible slide-over drawer for Interior design notes (controlled by isNotesOpen state) -->
+    <aside id="notesSlideOverDrawer" class="notes-slide-over-drawer" aria-labelledby="designRecommendationsTitle" aria-hidden="true" hidden>
+      <div id="notesDrawerBackdrop" class="notes-drawer-backdrop"></div>
+      <div class="notes-drawer-panel glass-panel">
+        <div class="notes-drawer-header">
+          <div>
+            <p class="studio-eyebrow">Design Insights</p>
+            <h2 id="designRecommendationsTitle" class="panel-title"><span>✦</span> Interior design notes</h2>
+          </div>
+          <button type="button" id="closeNotesDrawerBtn" class="notes-drawer-close" aria-label="Close design insights">✕</button>
+        </div>
+
+        <div class="notes-drawer-body">
+          <section class="design-recommendations" aria-labelledby="designRecommendationsTitle">
+            <span class="metric-sub">Room-aware advice & color palette</span>
+            <p id="recommendationPalette" class="recommendation-palette">Building a palette from your preferences…</p>
+            <div id="recommendationList" class="recommendation-list" aria-live="polite"><p class="recommendation-empty">Design and styling advice will appear here.</p></div>
+            <p class="recommendation-disclaimer">Suggestions reflect the room type, style, layout checks and budget.</p>
+          </section>
+
+          <section class="studio-guidelines" aria-labelledby="layoutGuidelinesTitle">
+            <div class="panel-header"><h2 id="layoutGuidelinesTitle" class="panel-title">Layout principles</h2><span aria-hidden="true">⌖</span></div>
+            <ul class="layout-guidelines">
+              <li><b>A* walking path</b><span>Keep the main route clear from the door.</span></li>
+              <li><b>Door clearance</b><span>Leave room for the door opening and swing.</span></li>
+              <li><b>Daylight</b><span>Avoid placing tall pieces in front of windows.</span></li>
+              <li><b>Wall alignment</b><span>Place beds and storage along suitable walls.</span></li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div id="recommendationDialog" class="recommendation-dialog" role="dialog" aria-modal="true" aria-labelledby="recommendationDialogTitle" hidden>
+    <section class="recommendation-dialog-panel">
+      <div class="recommendation-dialog-head">
+        <div><span class="recommendation-category">SMARTSPACE DESIGN ENGINE</span><h2 id="recommendationDialogTitle">Recommended designs</h2></div>
+        <button type="button" id="closeRecommendationsBtn" class="recommendation-close" aria-label="Close recommendations">×</button>
+      </div>
+      <p class="recommendation-engine-note">Each bundle is checked against your room, budget, furniture collisions and A* circulation path before it can be applied.</p>
+      <div class="recommendation-request-grid">
+        <label>Room type<select id="recommendationRoomType"><option value="living_room">Living room</option><option value="bedroom">Bedroom</option><option value="home_office">Home office</option><option value="dining_room">Dining room</option><option value="kitchen">Kitchen</option><option value="bathroom">Bathroom</option></select></label>
+        <label>Width (ft)<input id="recommendationWidth" type="number" min="6" max="60" step="0.5" value="14"></label>
+        <label>Length (ft)<input id="recommendationLength" type="number" min="6" max="60" step="0.5" value="16"></label>
+        <label>Budget (₹)<input id="recommendationBudget" type="number" min="5000" step="500" value="85000"></label>
+        <label>Style<select id="recommendationStyle"><option value="modern">Modern</option><option value="minimalist">Minimalist</option><option value="scandinavian">Scandinavian</option><option value="industrial">Industrial</option><option value="contemporary">Contemporary</option></select></label>
+      </div>
+      <button type="button" id="generateRecommendationsBtn" class="btn btn-dqn">Find matching designs <span aria-hidden="true">→</span></button>
+      <p id="recommendationRequestError" class="form-error" role="alert" hidden></p>
+      <div id="recommendationEngineStatus" class="recommendation-engine-status" aria-live="polite"></div>
+      <div id="recommendationBundleResults" class="recommendation-bundle-results" aria-live="polite"></div>
+    </section>
+  </div>
+
+  {% include "_site_footer.html" %}
+
+  <script src="{{ url_for('static', filename='js/furniture_renderer.js', v='20260928-shared-furniture-v1') }}"></script>
+  <script src="{{ url_for('static', filename='js/floorplan_canvas.js', v='20260928-directional-assets-v3') }}"></script>
+  <script>window.smartSpaceFurnitureSpecs = {{ specs | tojson }};</script>
+  <script src="{{ url_for('static', filename='js/room_3d.js', v='20260928-reference-studio') }}"></script>
+  <script src="{{ url_for('static', filename='js/api.js', v='20260929-viva') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js', v='20260930-furniture-grid') }}"></script>
+  <script src="{{ url_for('static', filename='js/recommendations.js', v='20260928-react-handoff') }}"></script>
+  <script>
+    document.querySelectorAll('.studio-tab-btn').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.studio-tab-btn').forEach((tab) => {
+          tab.classList.remove('active');
+          tab.setAttribute('aria-selected', 'false');
+        });
+        document.querySelectorAll('.subtab-content').forEach((panel) => { panel.hidden = true; });
+        button.classList.add('active');
+        button.setAttribute('aria-selected', 'true');
+        const panel = document.getElementById(button.getAttribute('data-subtab'));
+        if (panel) panel.hidden = false;
+      });
+    });
+    document.querySelectorAll('.view-mode-btn').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.view-mode-btn').forEach((tab) => tab.setAttribute('aria-pressed', String(tab === button)));
+      });
+    });
+  </script>
+  <script type="module" src="{{ url_for('static', filename='dist/smartspace-frontend.js', v='20260930-furniture-grid') }}"></script>
+</body>
+</html>

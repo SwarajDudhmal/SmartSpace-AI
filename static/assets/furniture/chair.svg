@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs><linearGradient id="wood" x1="12" y1="6" x2="88" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#bb9468"/><stop offset="1" stop-color="#896849"/></linearGradient><linearGradient id="fabric" x1="22" y1="36" x2="78" y2="86" gradientUnits="userSpaceOnUse"><stop stop-color="#d6dfd2"/><stop offset="1" stop-color="#9cae9a"/></linearGradient></defs>
+  <rect x="17" y="6" width="66" height="88" rx="22" fill="url(#wood)" stroke="#72563c" stroke-width="2"/>
+  <rect x="23" y="12" width="54" height="32" rx="16" fill="#dac8aa" stroke="#a98b66"/>
+  <path d="M30 23c10-6 30-6 40 0M31 31c9 4 29 4 38 0" stroke="#f1e7d5" stroke-opacity=".8" stroke-width="1.5" stroke-linecap="round"/>
+  <rect x="23" y="49" width="54" height="37" rx="14" fill="url(#fabric)" stroke="#71836f" stroke-width="1.5"/>
+  <path d="M30 57c12-4 28-4 40 0M30 78c13 4 27 4 40 0" stroke="#e9eee4" stroke-opacity=".8" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="50" cy="67" r="2" fill="#819481"/><circle cx="40" cy="67" r="2" fill="#819481"/><circle cx="60" cy="67" r="2" fill="#819481"/>
+  <path d="M28 9v-3m44 3v-3M28 91v4m44-4v4" stroke="#624b34" stroke-width="3" stroke-linecap="round"/>
+</svg>

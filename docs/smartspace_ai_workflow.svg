@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">SmartSpace AI workflow and system architecture</title>
+  <desc id="desc">User room details and optional photo flow through a Flask application, optional YOLO vision, spatial layout evaluation and optimization, then the 2D and 3D studio and exports. Separate dataset training workflows can provide optional model weights.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#55718f"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#159a83"/></marker>
+    <marker id="arrowOrange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#d28b30"/></marker>
+    <style>
+      .bg{fill:#f4f7fb}.title{font:700 34px 'Segoe UI',Arial,sans-serif;fill:#14253b}.subtitle{font:400 16px 'Segoe UI',Arial,sans-serif;fill:#53677f}
+      .lane{fill:#fff;stroke:#d9e3ef;stroke-width:2}.lane-title{font:700 18px 'Segoe UI',Arial,sans-serif;fill:#263d59;letter-spacing:.6px}
+      .box{fill:#fff;stroke:#8da7c3;stroke-width:2;rx:16}.blue{fill:#edf5ff;stroke:#5882b2}.teal{fill:#eaf8f5;stroke:#42a38f}.purple{fill:#f2efff;stroke:#8771c7}.orange{fill:#fff5e7;stroke:#d59a47}.gray{fill:#f2f5f8;stroke:#a8b5c3}
+      .box-title{font:700 17px 'Segoe UI',Arial,sans-serif;fill:#1e344e}.box-copy{font:400 14px 'Segoe UI',Arial,sans-serif;fill:#465c74}.small{font:400 12px 'Segoe UI',Arial,sans-serif;fill:#62758a}
+      .arrow{fill:none;stroke:#55718f;stroke-width:3;marker-end:url(#arrow)}.green-arrow{fill:none;stroke:#159a83;stroke-width:3;marker-end:url(#arrowGreen)}.optional-arrow{fill:none;stroke:#d28b30;stroke-width:3;stroke-dasharray:8 7;marker-end:url(#arrowOrange)}
+      .pill{font:700 11px 'Segoe UI',Arial,sans-serif;fill:#fff}.tag{font:700 12px 'Segoe UI',Arial,sans-serif;fill:#8d5c13}
+    </style>
+  </defs>
+  <rect class="bg" width="1600" height="1120"/>
+  <text class="title" x="56" y="58">SmartSpace AI | How the project works</text>
+  <text class="subtitle" x="56" y="88">Room input → spatial reasoning → editable design → shareable outputs</text>
+
+  <rect class="lane" x="44" y="116" width="1512" height="235" rx="22"/>
+  <text class="lane-title" x="70" y="150">1 · USER SETUP AND ROOM UNDERSTANDING</text>
+  <rect class="box blue" x="76" y="184" width="240" height="112" rx="16"/>
+  <text class="box-title" x="98" y="214">Create project</text><text class="box-copy" x="98" y="240">Name · room type</text><text class="box-copy" x="98" y="261">Description</text>
+  <path class="arrow" d="M316 240 H366"/>
+  <rect class="box blue" x="374" y="184" width="285" height="112" rx="16"/>
+  <text class="box-title" x="397" y="214">Room details</text><text class="box-copy" x="397" y="240">Dimensions · openings · budget</text><text class="box-copy" x="397" y="261">Style · colors · material</text>
+  <path class="arrow" d="M659 240 H710"/>
+  <rect class="box orange" x="718" y="174" width="355" height="132" rx="16"/>
+  <text class="box-title" x="742" y="204">Optional room photo</text><text class="box-copy" x="742" y="230">YOLO weights installed → detect 10 classes</text><text class="box-copy" x="742" y="252">No weights / no detections → starter layout</text><text class="small" x="742" y="278">Photo coordinates are approximate, not surveyed geometry</text>
+  <path class="arrow" d="M1073 240 H1124"/>
+  <rect class="box blue" x="1132" y="184" width="366" height="112" rx="16"/>
+  <text class="box-title" x="1156" y="214">Flask room API</text><text class="box-copy" x="1156" y="240">Feet → meters · assign dimensions</text><text class="box-copy" x="1156" y="261">Furniture specs · cost · initial layout</text>
+  <rect x="1450" y="132" width="68" height="24" rx="12" fill="#d28b30"/><text class="pill" x="1464" y="149">OPTIONAL</text>
+
+  <rect class="lane" x="44" y="375" width="1512" height="280" rx="22"/>
+  <text class="lane-title" x="70" y="410">2 · LAYOUT ENGINE AND OPTIMIZATION</text>
+  <rect class="box teal" x="76" y="444" width="290" height="156" rx="16"/>
+  <text class="box-title" x="98" y="475">Metric room state</text><text class="box-copy" x="98" y="503">Up to 8 furniture items</text><text class="box-copy" x="98" y="525">133-value state vector</text><text class="box-copy" x="98" y="547">Dimensions · position · type</text><text class="box-copy" x="98" y="569">Budget · door · windows</text>
+  <path class="green-arrow" d="M366 522 H420"/>
+  <rect class="box teal" x="428" y="444" width="410" height="156" rx="16"/>
+  <text class="box-title" x="450" y="475">Evaluate each layout</text><text class="box-copy" x="450" y="503">SAT collisions · room boundary · door clearance</text><text class="box-copy" x="450" y="525">Window obstruction · wall / TV rules · budget</text><text class="box-copy" x="450" y="547">A* walking paths on a 15 cm occupancy grid</text><text class="small" x="450" y="575">Returns reward, score, collisions, cost and paths</text>
+  <path class="green-arrow" d="M838 522 H892"/>
+  <rect class="box purple" x="900" y="444" width="335" height="156" rx="16"/>
+  <text class="box-title" x="922" y="475">Optimize button</text><text class="box-copy" x="922" y="503">Try 25 cm moves · rotate · snap to wall</text><text class="box-copy" x="922" y="525">Keep reward-improving changes</text><text class="box-copy" x="922" y="547">Animate the resulting trajectory</text><text class="small" x="922" y="575">DQN Q-values only break reward ties</text>
+  <path class="green-arrow" d="M1235 522 H1289"/>
+  <rect class="box orange" x="1297" y="444" width="201" height="156" rx="16"/>
+  <text class="box-title" x="1318" y="475">Current checkout</text><text class="box-copy" x="1318" y="503">Spatial search active</text><text class="box-copy" x="1318" y="525">No DQN checkpoint</text><text class="box-copy" x="1318" y="547">No YOLO weights</text><text class="small" x="1318" y="575">as of 28 Sep 2026</text>
+
+  <rect class="lane" x="44" y="679" width="1512" height="188" rx="22"/>
+  <text class="lane-title" x="70" y="714">3 · STUDIO, FEEDBACK, AND EXPORT</text>
+  <rect class="box blue" x="76" y="746" width="360" height="87" rx="16"/>
+  <text class="box-title" x="98" y="777">Editable studio</text><text class="box-copy" x="98" y="803">2D floorplan · drag / rotate · optional 3D view</text>
+  <path class="arrow" d="M436 789 H510"/>
+  <rect class="box teal" x="518" y="746" width="380" height="87" rx="16"/>
+  <text class="box-title" x="540" y="777">Live design feedback</text><text class="box-copy" x="540" y="803">Score · overlaps · reachable paths · budget</text>
+  <path class="arrow" d="M898 789 H972"/>
+  <rect class="box blue" x="980" y="746" width="518" height="87" rx="16"/>
+  <text class="box-title" x="1002" y="777">Deliverables</text><text class="box-copy" x="1002" y="803">PNG floorplan · TXT furniture schedule and metrics</text>
+
+  <rect class="lane" x="44" y="891" width="1512" height="185" rx="22"/>
+  <text class="lane-title" x="70" y="926">OPTIONAL OFFLINE TRAINING — SUPPLIES MODEL WEIGHTS TO THE RUNTIME</text>
+  <rect class="box gray" x="76" y="953" width="310" height="88" rx="16"/>
+  <text class="box-title" x="98" y="984">YOLO data tools</text><text class="box-copy" x="98" y="1010">Synthetic / remapped images + labels</text>
+  <path class="optional-arrow" d="M386 997 H465"/>
+  <rect class="box orange" x="473" y="953" width="300" height="88" rx="16"/>
+  <text class="box-title" x="495" y="984">Train detector</text><text class="box-copy" x="495" y="1010">Save .pt / .onnx under data/models</text>
+  <path class="optional-arrow" d="M773 997 H853"/>
+  <rect class="box gray" x="861" y="953" width="260" height="88" rx="16"/>
+  <text class="box-title" x="883" y="984">Train DQN</text><text class="box-copy" x="883" y="1010">Save policy + history</text>
+  <path class="optional-arrow" d="M1121 997 H1201"/>
+  <rect class="box purple" x="1209" y="953" width="289" height="88" rx="16"/>
+  <text class="box-title" x="1231" y="984">Optional runtime models</text><text class="box-copy" x="1231" y="1010">Loaded when app starts</text>
+  <path class="optional-arrow" d="M1370 953 V616 H1067 V608"/>
+  <path class="optional-arrow" d="M1320 953 V333 H894 V314"/>
+
+  <circle cx="66" cy="1098" r="6" fill="#159a83"/><text class="small" x="80" y="1102">Core app flow</text>
+  <line x1="195" y1="1098" x2="240" y2="1098" stroke="#d28b30" stroke-width="3" stroke-dasharray="7 6"/><text class="small" x="250" y="1102">Optional model / training path</text>
+  <text class="small" x="1270" y="1102">Architecture based on current workspace source</text>
+</svg>
