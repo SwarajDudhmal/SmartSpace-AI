@@ -104,3 +104,18 @@ node_modules/
 .gsd/
 .presentation-build/
 *.log
+
+# Retired prototypes and development-workflow artifacts
+/VERSION
+/model_capabilities.yaml
+/src/pages/Studio.jsx
+/static/local-planner/
+/data/report_diagrams/
+/scripts/search_repo.*
+/scripts/setup_search.*
+/scripts/validate-agents.*
+/scripts/validate-all.*
+/scripts/validate-encoding.*
+/scripts/validate-skills.*
+/scripts/validate-templates.*
+/scripts/validate-workflows.*
