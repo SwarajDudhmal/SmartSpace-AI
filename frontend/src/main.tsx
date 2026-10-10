@@ -7,8 +7,19 @@ import { ProjectWizard } from './components/ProjectWizard';
 import { AuthPage } from './components/AuthPage';
 import { ProjectsDashboard } from './components/ProjectsDashboard';
 import { FurniturePanel } from './components/FurniturePanel';
+import { NativeSelectAdapter } from './components/ResponsiveSelect';
 import type { LayoutLoadedDetail } from './types';
 import './styles.css';
+
+document.querySelectorAll<HTMLSelectElement>('select[data-responsive-select]').forEach((select) => {
+  const slot = document.createElement('span');
+  slot.className = 'ss-select-slot';
+  select.insertAdjacentElement('afterend', slot);
+  select.hidden = true;
+  select.style.display = 'none';
+  select.tabIndex = -1;
+  createRoot(slot).render(<StrictMode><NativeSelectAdapter select={select} /></StrictMode>);
+});
 
 document.querySelectorAll<HTMLElement>('[data-layout-card-grid]').forEach((slot) => {
   const kind = slot.dataset.layoutCardGrid === 'lighting' ? 'lighting' : 'featured';
@@ -26,8 +37,7 @@ if (photoSlot) createRoot(photoSlot).render(<StrictMode><ProjectPhotoUpload /></
 
 const wizardSlot = document.getElementById('project-wizard-root');
 if (wizardSlot) {
-  const initialStep = Number(wizardSlot.dataset.initialStep || new URLSearchParams(location.search).get('step') || 1);
-  createRoot(wizardSlot).render(<StrictMode><ProjectWizard initialStep={initialStep} /></StrictMode>);
+  createRoot(wizardSlot).render(<StrictMode><ProjectWizard /></StrictMode>);
 }
 
 const authSlot = document.getElementById('auth-react-root');

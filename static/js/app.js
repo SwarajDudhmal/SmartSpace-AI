@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentLayout = null;
   let currentViewMode = '2d';
   let isOptimizing = false;
+  let evaluationVersion = 0;
   let replacementItemId = null;
 
   // UI Element References
@@ -64,10 +65,39 @@ document.addEventListener('DOMContentLoaded', () => {
       ...layout,
       name: layout?.name || previous.name,
       style: layout?.style || previous.style,
-      annotated_image: layout?.annotated_image || previous.annotated_image,
+      annotated_image: layout?.annotated_image === undefined ? previous.annotated_image : layout.annotated_image,
       projectId: layout?.projectId || previous.projectId,
       projectName: layout?.projectName || previous.projectName
     };
+  }
+
+  function renderRoomPhoto() {
+    const empty = document.getElementById('roomPhotoEmpty');
+    const status = document.getElementById('visionPreviewStatus');
+    const noUpload = currentLayout?.photo_uploaded === false || currentLayout?.vision_fallback_reason === 'No photo was uploaded.';
+    // A legacy annotation without upload provenance may be a demo image.
+    const photo = noUpload ? null : (currentLayout?.room_photo || (currentLayout?.photo_uploaded === true ? currentLayout.annotated_image : null));
+    if (detectedThumbImg) {
+      detectedThumbImg.hidden = !photo;
+      if (photo) {
+        detectedThumbImg.src = photo;
+        detectedThumbImg.alt = `Uploaded room photo for ${currentLayout.name || 'this project'}`;
+      } else {
+        detectedThumbImg.removeAttribute('src');
+      }
+    }
+    if (empty) {
+      empty.hidden = Boolean(photo);
+      empty.textContent = currentLayout?.photo_uploaded
+        ? 'The uploaded photo preview is unavailable. Upload a valid JPG or PNG in Step 4.'
+        : 'No photo was uploaded for this project. Add your room photo in Step 4 when creating a project.';
+    }
+    if (status) {
+      status.textContent = !photo ? '' : currentLayout.vision_detected_count > 0
+        ? `${currentLayout.vision_detected_count} objects detected in your uploaded photo.`
+        : currentLayout.vision_fallback_reason || 'Your uploaded room photo.';
+      status.classList.toggle('model-unavailable', Boolean(photo && currentLayout.vision_fallback_reason));
+    }
   }
 
   function persistStudioLayout() {
@@ -117,26 +147,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const visionBadge = document.getElementById('visionHeaderBadge');
       const optimizerBadge = document.getElementById('optimizerHeaderBadge');
       const optimizerDetail = document.getElementById('optimizerModelBadge');
-      const visionDetail = document.getElementById('visionPreviewStatus');
       if (visionBadge) visionBadge.textContent = `👁 ${visionText}`;
       if (optimizerBadge) optimizerBadge.textContent = `🧠 ${optimizerText}`;
       if (optimizerDetail) optimizerDetail.textContent = optimizer.mode;
-      if (visionDetail) {
-        if (!vision.available && currentLayout?.annotated_image) {
-          visionDetail.textContent = 'Photo saved. Detector weights are missing, so starter furniture is shown.';
-        } else if (vision.available && currentLayout?.annotated_image && !currentLayout.vision_detected_count) {
-          visionDetail.textContent = 'No furniture was detected in this photo. Starter furniture is shown.';
-        } else {
-          visionDetail.textContent = vision.available
-            ? `Real detections · ${vision.backend} model`
-            : 'No detector weights installed. Add data/models/yolo_interior.pt or .onnx to enable photo detections.';
-        }
-        visionDetail.classList.toggle('model-unavailable', !vision.available);
-      }
+      renderRoomPhoto();
     } catch (error) {
       console.error('Could not load model status:', error);
-      const visionDetail = document.getElementById('visionPreviewStatus');
-      if (visionDetail) visionDetail.textContent = 'Model status could not be loaded.';
+      renderRoomPhoto();
     }
   }
 
@@ -194,7 +211,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setActionLog('ERROR', error.message || 'Could not load that room preset.', 'amber');
       }
     }
-    const pendingRecommendation = readSavedRoom('smartspace_pending_layout');
+    // The wizard handoff belongs to this tab, not an old persistent draft.
+    let pendingRecommendation = null;
+    try { pendingRecommendation = sessionStorage.getItem('smartspace_pending_layout'); } catch (_storageError) { }
     if (pendingRecommendation) {
       try {
         const layout = JSON.parse(pendingRecommendation);
@@ -224,8 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try { sessionStorage.removeItem('smartspace_studio_layout'); } catch (_error) { }
       }
     }
-    // Fallback if no custom room created yet
-    loadRoomPreset('master_bedroom');
+    // A new visitor must provide their own room inputs before opening Studio.
+    window.location.replace('/create-project');
   }
 
   function updateRoomHeaders(layout) {
@@ -265,12 +284,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function updateStudioLayout(layout) {
-    currentLayout = mergeRoomLayout(layout);
-    if (detectedThumbImg && layout.annotated_image) {
-      detectedThumbImg.src = currentLayout.annotated_image;
-      detectedThumbImg.alt = `AI detections for ${layout.name || 'this room'}`;
-    }
+  function updateStudioLayout(layout, replace = false) {
+    evaluationVersion += 1;
+    currentLayout = replace ? { ...layout } : mergeRoomLayout(layout);
+    renderRoomPhoto();
     floorplanCanvas.setLayout(currentLayout);
     currentLayout.furniture = floorplanCanvas.furniture.map(item => ({ ...item }));
     if (room3D && currentViewMode === '3d') {
@@ -349,6 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function evaluateLayout(layout) {
+    const version = ++evaluationVersion;
     try {
       const res = await fetch('/api/evaluate', {
         method: 'POST',
@@ -356,6 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify(layout)
       });
       const data = await res.json();
+      if (version !== evaluationVersion) return;
       if (data.success && data.metrics) {
         updateMetricsUI(data.metrics);
         updateDesignRecommendations(data.design_advice);
@@ -380,10 +399,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.addEventListener('smartspace:load-layout', async (event) => {
+    if (isOptimizing) return;
     const incoming = event.detail?.layout || event.detail;
     if (!incoming || !Array.isArray(incoming.furniture)) return;
 
-    updateStudioLayout(incoming);
+    updateStudioLayout(incoming, event.detail?.source !== 'recommendation-modal');
     updateRoomHeaders(currentLayout);
     persistStudioLayout();
     setActionLog('DESIGN', `${currentLayout.name || 'Recommended layout'} loaded into the studio.`, 'emerald');
@@ -391,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('smartspace:budget-change', async (event) => {
-    if (!currentLayout) return;
+    if (!currentLayout || isOptimizing) return;
     const requestedBudget = Number(event.detail?.budget);
     if (!Number.isFinite(requestedBudget)) return;
     currentLayout.budget = Math.min(500000, Math.max(20000, Math.round(requestedBudget)));
@@ -464,6 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Add Item From Catalog
   document.querySelectorAll('.catalog-add-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (isOptimizing) return;
       const type = btn.getAttribute('data-type');
       const w = parseFloat(btn.getAttribute('data-w') || 1.2);
       const d = parseFloat(btn.getAttribute('data-d') || 0.8);
@@ -554,6 +575,13 @@ document.addEventListener('DOMContentLoaded', () => {
     dqnOptimizeBtn.addEventListener('click', async () => {
       if (isOptimizing || !currentLayout) return;
       isOptimizing = true;
+      evaluationVersion += 1;
+      floorplanCanvas.interactionDisabled = true;
+      floorplanCanvas.draggedItem = null;
+      updateInventoryList(floorplanCanvas.furniture);
+      const controls = [...document.querySelectorAll('.catalog-add-btn, #resetLayoutBtn, #openRecommendationsBtn, #generateRecommendationsBtn, #saveProjectBtn, #ss-budget-slider')];
+      const disabledBefore = controls.map(control => control.disabled);
+      controls.forEach(control => { control.disabled = true; });
       dqnOptimizeBtn.disabled = true;
       dqnOptimizeBtn.innerHTML = '<span>Optimizing layout…</span>';
 
@@ -565,16 +593,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.error || 'The layout could not be optimized.');
+        if (data.validation?.valid !== true || data.comfort?.valid !== true || (data.final_layout?.metrics?.collision_count ?? 0) !== 0
+          || !Array.isArray(data.final_layout?.state_133d) || data.final_layout.state_133d.length !== 133) {
+          throw new Error('The optimizer returned an unvalidated layout. Your plan has not been replaced.');
+        }
         
         if (data.success && data.trajectory) {
           await playTrajectoryAnimation(data.trajectory);
           updateStudioLayout(data.final_layout);
+          window.smartSpaceMdpState = data.final_layout.state_133d;
+          window.dispatchEvent(new CustomEvent('smartspace:mdp-state', { detail: { state: data.final_layout.state_133d, source: 'optimizer' } }));
           updateMetricsUI(data.final_layout.metrics);
           updateRoomHeaders(currentLayout);
           persistStudioLayout();
           await evaluateLayout(currentLayout);
           setActionLog(data.optimizer_trained ? 'DQN' : 'LAYOUT',
-            data.optimizer_trained ? 'Layout improved with the trained optimizer.' : 'Layout improved with spatial optimization.',
+            'Layout complete: no collisions; viewing directions, usable furniture access and 0.75 m walking routes checked.',
             'emerald');
         }
       } catch (err) {
@@ -582,6 +616,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setActionLog('ERROR', err.message || 'The optimizer is unavailable. Try again.', 'amber');
       } finally {
         isOptimizing = false;
+        floorplanCanvas.interactionDisabled = false;
+        controls.forEach((control, index) => { control.disabled = disabledBefore[index]; });
+        updateInventoryList(floorplanCanvas.furniture);
         dqnOptimizeBtn.disabled = false;
         dqnOptimizeBtn.innerHTML = '<span>Optimize layout</span>';
       }
@@ -602,6 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Reset Layout
   if (resetLayoutBtn) {
     resetLayoutBtn.addEventListener('click', () => {
+      if (isOptimizing) return;
       try { localStorage.removeItem('smartspace_studio_layout'); } catch (_error) { }
       try { sessionStorage.removeItem('smartspace_studio_layout'); } catch (_error) { }
       initializeRoom(false);
@@ -611,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveProjectBtn = document.getElementById('saveProjectBtn');
   if (saveProjectBtn) {
     saveProjectBtn.addEventListener('click', async () => {
-      if (!currentLayout) return;
+      if (!currentLayout || isOptimizing) return;
       saveProjectBtn.disabled = true;
       saveProjectBtn.textContent = 'Saving design…';
       try {

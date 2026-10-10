@@ -71,7 +71,7 @@ export function FurniturePanel() {
 
   return (
     <div className="min-h-0 min-w-0 overflow-hidden">
-      <div className="grid max-h-64 grid-cols-1 content-start gap-3 overflow-x-hidden overflow-y-auto overscroll-contain p-1 md:grid-cols-2 xl:grid-cols-3 [scrollbar-gutter:stable]"
+      <div className="grid max-h-96 grid-cols-1 content-start gap-2 overflow-x-hidden overflow-y-auto overscroll-contain p-1 [scrollbar-gutter:stable]"
         aria-label="Room furniture" data-furniture-grid>
         {inventory.items.length ? inventory.items.map((item) => (
           <FurnitureItemCard key={item.id} item={item} selected={inventory.selectedId === item.id} disabled={inventory.disabled} />

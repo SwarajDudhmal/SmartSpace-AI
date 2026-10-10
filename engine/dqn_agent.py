@@ -38,6 +38,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+from engine.layout_repair import repair_layout, validate_geometry
+from engine.layout_comfort import improve_comfort
 
 try:
     from tensorflow import keras
@@ -233,13 +235,41 @@ class DQNAgent:
         if not env.furniture or max_steps == 0:
             return trajectory
 
+        # Resolve overlaps independently of the soft reward: small greedy steps
+        # may need to temporarily lose reward before two large pieces separate.
+        if not validate_geometry(env.furniture, env.room_w, env.room_l)["valid"]:
+            repair_deadline = min(deadline, time.monotonic() + min(8.0, max(0.0, time_budget_seconds) * .25))
+            if not repair_layout(env, repair_deadline):
+                return trajectory
+            repaired = env.get_layout_dict()
+            trajectory.append({
+                "step": 1, "action_desc": "Separate furniture and fit rotated footprints inside the room",
+                "layout": repaired, "score": repaired["metrics"]["ergonomics_score"],
+                "reward": repaired["metrics"]["total_reward"],
+            })
+
+        # Search full placements and all cardinal rotations together before
+        # local refinement. A 90-degree intermediate pose can be invalid even
+        # when the required 180-degree pose is valid (same SAT footprint).
+        before_comfort = copy.deepcopy(env.furniture)
+        remaining = max(0, deadline - time.monotonic())
+        improve_comfort(env, time.monotonic() + remaining * .8)
+        if env.furniture != before_comfort:
+            comfortable = env.get_layout_dict()
+            trajectory.append({
+                "step": len(trajectory), "action_desc": "Arrange viewing directions and usable access space",
+                "layout": comfortable, "score": comfortable["metrics"]["ergonomics_score"],
+                "reward": comfortable["metrics"]["total_reward"],
+            })
+
         action_names = ["Shift right", "Shift left", "Move toward the window", "Move toward the entry", "Rotate", "Align to wall"]
         for step in range(1, max_steps + 1):
             if time.monotonic() >= deadline:
                 break
             state = env.get_state()
             q_values = self._predict(self.q_net, state[None, :])[0] if self.is_trained else np.zeros(self.action_dim)
-            current_reward = env.evaluate_layout()["total_reward"]
+            current_metrics = env.evaluate_layout()
+            current_reward = current_metrics["total_reward"]
             original_furniture = copy.deepcopy(env.furniture)
             original_step_count = env.step_count
             candidates = []
@@ -250,7 +280,9 @@ class DQNAgent:
                 env.furniture = copy.deepcopy(original_furniture)
                 env.step_count = original_step_count
                 _, reward, _, info = env.step(action)
-                if reward > current_reward + 1e-6:
+                no_comfort_regression = (len(info["metrics"]["comfort"]["issues"]) <= len(current_metrics["comfort"]["issues"])
+                                         and info["metrics"]["comfort"]["penalty"] <= current_metrics["comfort"]["penalty"] + 1e-6)
+                if reward > current_reward + 1e-6 and no_comfort_regression and validate_geometry(env.furniture, env.room_w, env.room_l)["valid"]:
                     # **Reuse the evaluated state:** step() already ran SAT/A*.
                     candidate_layout = env.get_layout_dict(metrics=info["metrics"])
                     candidates.append((float(reward), float(q_values[action]), action,
@@ -270,7 +302,7 @@ class DQNAgent:
             env.load_furniture(layout["furniture"])
             env.step_count = original_step_count + 1
             trajectory.append({
-                "step": step,
+                "step": len(trajectory),
                 "action_desc": f"{action_name} · {item_name}",
                 "layout": layout,
                 "score": layout["metrics"]["ergonomics_score"],

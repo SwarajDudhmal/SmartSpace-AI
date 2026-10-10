@@ -40,6 +40,7 @@ from werkzeug.exceptions import HTTPException
 
 from engine.design_advisor import build_interior_recommendations
 from engine.interior_env import InteriorEnv
+from engine.layout_repair import validate_geometry
 from engine.recommender import recommend_designs
 from routes.jobs import submit_work
 
@@ -188,11 +189,32 @@ def optimize_layout():
 def _optimize_room(room_data, dqn_agent):
     """Return trajectory JSON from detached room input on the model worker."""
     max_steps = max(0, min(100, int(room_data.get("max_steps", 25))))
+    furniture = room_data.get("furniture", room_data.get("initial_furniture", []))
+    if not isinstance(furniture, list) or len(furniture) > 8:
+        return jsonify(success=False, error="The optimizer supports up to 8 furniture items. Remove items before optimizing; your plan has not been changed."), 422
     env = InteriorEnv(room_data)
-    trajectory = dqn_agent.optimize_layout_trajectory(env, max_steps=max_steps)
+    trajectory = dqn_agent.optimize_layout_trajectory(env, max_steps=max_steps, time_budget_seconds=35.0)
+    validation = validate_geometry(env.furniture, env.room_w, env.room_l)
+    if not validation["valid"]:
+        return jsonify(
+            success=False, validation=validation,
+            error="No collision-free arrangement was found within the search limit. Your plan is unchanged. Move or remove a large item, or adjust the room dimensions, then retry.",
+        ), 422
+    final_layout = env.get_layout_dict()
+    comfort = final_layout["metrics"]["comfort"]
+    if not comfort["valid"]:
+        messages = list(dict.fromkeys(issue["message"] for issue in comfort["issues"]))
+        return jsonify(
+            success=False, validation=validation, comfort=comfort,
+            error="A collision-free layout was found, but comfortable viewing and access could not all be resolved within the search limit. "
+                  + " ".join(messages[:3]) + " Your plan is unchanged. Consider a smaller item or removing an item, then retry.",
+        ), 422
+    final_layout["state_133d"] = env.get_state().tolist()
     return {
         "success": True, "trajectory": trajectory,
-        "final_layout": env.get_layout_dict(), "step_count": len(trajectory),
+        "final_layout": final_layout, "step_count": len(trajectory) - 1,
+        "validation": validation,
+        "comfort": comfort,
         "optimizer_trained": dqn_agent.is_trained, "optimizer_backend": dqn_agent.backend,
     }
 

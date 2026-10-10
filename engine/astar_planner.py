@@ -33,6 +33,7 @@ from typing import List, Tuple, Dict, Any, Optional
 import numpy as np
 
 from engine.spatial_utils import get_rotated_corners, check_obb_collision
+from engine.furniture_orientation import approach_points
 
 class AStarPlanner:
     """Map metric furniture footprints to a grid and return walkable paths.
@@ -73,6 +74,13 @@ class AStarPlanner:
         that extra clearance on each side of the rectangle.
         """
         self.grid.fill(0)
+        # A person has width, including next to a boundary wall. Furniture
+        # inflation is a full width increment, hence half on each side.
+        radius = inflation_margin / 2
+        xs = (np.arange(self.cols) + .5) * self.res
+        ys = (np.arange(self.rows) + .5) * self.res
+        self.grid[:, (xs < radius) | (xs > self.room_w - radius)] = 1
+        self.grid[(ys < radius) | (ys > self.room_l - radius), :] = 1
         
         for item in furniture_list:
             cx = item["x"]
@@ -109,14 +117,18 @@ class AStarPlanner:
                         
         return self.grid
 
-    def plan_path(self, start_pos: Tuple[float, float], goal_pos: Tuple[float, float]) -> Optional[List[Tuple[float, float]]]:
+    def plan_path(self, start_pos: Tuple[float, float], goal_pos: Tuple[float, float], *, snap_endpoints=True) -> Optional[List[Tuple[float, float]]]:
         """Return a shortest grid path between metre coordinates, or None.
 
         Occupied endpoints snap to a nearby free cell. Returned coordinates
         are cell centres; diagonals cannot pass between touching obstacles.
         """
+        if not snap_endpoints and any(not (0 <= x < self.room_w and 0 <= y < self.room_l) for x, y in (start_pos, goal_pos)):
+            return None
         start_rc = self.world_to_grid(start_pos[0], start_pos[1])
         goal_rc = self.world_to_grid(goal_pos[0], goal_pos[1])
+        if not snap_endpoints and (self.grid[start_rc] or self.grid[goal_rc]):
+            return None
         
         # If start or goal is inside obstacle, look for nearest free neighbor
         if self.grid[start_rc[0], start_rc[1]] == 1:
@@ -220,9 +232,12 @@ class AStarPlanner:
             total_eval += 1
             item_id = item.get("id", f"{item_type}_{total_eval}")
             
-            # Target is the center or front interaction zone
-            fx, fy = item["x"], item["y"]
-            path = self.plan_path(door_pos, (fx, fy))
+            # Never snap through an obstacle to the back of a sofa. Approach
+            # the actual seat/storage front, either bed side, or any table side.
+            options = [self.plan_path(door_pos, point, snap_endpoints=False)
+                       for point in approach_points(item, furniture_items)]
+            available = [path for path in options if path]
+            path = min(available, key=len) if available else None
             
             if path is not None and len(path) > 0:
                 paths[item_id] = path

@@ -40,6 +40,8 @@
       byId('recommendationBudget').value = layout.budget || 85000;
       const style = String(layout.style || 'modern').toLowerCase();
       byId('recommendationStyle').value = [...byId('recommendationStyle').options].some((option) => option.value === style) ? style : 'modern';
+      byId('recommendationRoomType').dispatchEvent(new Event('change', { bubbles: true }));
+      byId('recommendationStyle').dispatchEvent(new Event('change', { bubbles: true }));
     }
     results.replaceChildren();
     error.hidden = true;

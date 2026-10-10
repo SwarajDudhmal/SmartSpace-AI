@@ -162,6 +162,7 @@ class FloorplanCanvas {
     window.addEventListener('resize', () => this.resizeCanvas());
 
     this.canvas.addEventListener('mousedown', (e) => {
+      if (this.interactionDisabled) return;
       const rect = this.canvas.getBoundingClientRect();
       const sx = e.clientX - rect.left;
       const sy = e.clientY - rect.top;
@@ -192,7 +193,7 @@ class FloorplanCanvas {
     });
 
     this.canvas.addEventListener('mousemove', (e) => {
-      if (!this.draggedItem) return;
+      if (this.interactionDisabled || !this.draggedItem) return;
       
       const rect = this.canvas.getBoundingClientRect();
       const sx = e.clientX - rect.left;
@@ -225,6 +226,7 @@ class FloorplanCanvas {
     
     // Double click to rotate +90 degrees
     this.canvas.addEventListener('dblclick', (e) => {
+      if (this.interactionDisabled) return;
       const rect = this.canvas.getBoundingClientRect();
       const sx = e.clientX - rect.left;
       const sy = e.clientY - rect.top;
@@ -567,13 +569,19 @@ class FloorplanCanvas {
       ctx.translate(sx, sy);
       ctx.rotate(-rotRad);
 
-      // Ergonomic Clearance Zone halo (0.75m walking aisle)
+      // Show the usable front (or bed sides), matching backend comfort checks.
       if (this.showClearances) {
         ctx.strokeStyle = isSelected ? 'rgba(189, 128, 80, 0.55)' : 'rgba(66, 94, 69, 0.2)';
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 4]);
-        const clearPx = 0.5 * this.scale;
-        ctx.strokeRect(-wPx / 2 - clearPx/2, -dPx / 2 - clearPx/2, wPx + clearPx, dPx + clearPx);
+        const depth = (item.type === 'chair' ? .25 : item.type === 'wardrobe' ? .75 : .60) * this.scale;
+        if (item.type === 'bed') {
+          const side = .75 * this.scale;
+          ctx.strokeRect(-wPx / 2 - side, -dPx * .4, side, dPx * .8);
+          ctx.strokeRect(wPx / 2, -dPx * .4, side, dPx * .8);
+        } else if (['sofa', 'chair', 'desk', 'wardrobe', 'cabinet'].includes(item.type)) {
+          ctx.strokeRect(-wPx * .4, dPx / 2, wPx * .8, depth);
+        }
         ctx.setLineDash([]);
       }
 
@@ -606,6 +614,19 @@ class FloorplanCanvas {
       ctx.shadowBlur = 0;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
+      // Asset front: TV points up at 0 degrees; seats and bed foot point down.
+      // The enclosing -rotation transform is the same transform as SAT.
+      if (this.showClearances && ['sofa', 'tv', 'chair', 'desk', 'bed'].includes(item.type)) {
+        const direction = item.type === 'tv' ? -1 : 1;
+        const start = direction * dPx / 2;
+        const end = start + direction * 16;
+        ctx.strokeStyle = '#32664f';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(0, start); ctx.lineTo(0, end);
+        ctx.moveTo(-4, end - direction * 5); ctx.lineTo(0, end); ctx.lineTo(4, end - direction * 5);
+        ctx.stroke();
+      }
       if (isSelected) {
         ctx.strokeStyle = '#bd8050';
         ctx.lineWidth = 3;

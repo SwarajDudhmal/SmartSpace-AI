@@ -1,6 +1,51 @@
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 
+/* Shared dropdowns: the menu is portalled out of clipped wizard cards. */
+.ss-select-slot { display: block; width: 100%; min-width: 0; }
+button.ss-select-trigger {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; min-width: 0; min-height: 46px; box-sizing: border-box;
+  padding: 11px 13px; border: 1px solid #dfe4dc; border-radius: 10px;
+  color: #2a3e30; background: #fff; text-align: left; cursor: pointer;
+  font: 400 13px/1.4 Inter, ui-sans-serif, system-ui, sans-serif;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+button.ss-select-trigger:hover { border-color: #94b39c; background: #fcfdfb; }
+button.ss-select-trigger:focus-visible, button.ss-select-trigger.is-open {
+  outline: none; border-color: #6a9776; box-shadow: 0 0 0 3px rgba(88,132,99,.16);
+}
+button.ss-select-trigger:disabled { opacity: .5; cursor: not-allowed; }
+.ss-select-value { min-width: 0; overflow-wrap: anywhere; }
+.ss-select-chevron { flex: 0 0 18px; color: #42664e; transition: transform .15s ease; }
+.ss-select-trigger.is-open .ss-select-chevron { transform: rotate(180deg); }
+.ss-select-menu {
+  position: fixed; z-index: 2000; box-sizing: border-box; margin: 0; padding: 5px;
+  overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+  border: 1px solid #cfded1; border-radius: 12px; background: #fff;
+  box-shadow: 0 14px 40px rgba(30,58,40,.16), 0 3px 8px rgba(30,58,40,.06);
+  color: #2a3e30; font: 400 13px/1.4 Inter, ui-sans-serif, system-ui, sans-serif;
+  scrollbar-width: thin; scrollbar-color: #b5c9ba transparent;
+}
+.ss-select-option {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 44px; box-sizing: border-box; padding: 10px 12px; border-radius: 7px;
+  overflow-wrap: anywhere; cursor: pointer; touch-action: pan-y;
+}
+.ss-select-option.is-active { background: #edf4ee; color: #214f35; }
+.ss-select-option.is-selected { background: #e0eee3; color: #245b3b; font-weight: 650; }
+.ss-select-option.is-selected.is-active { background: #d4e7d9; }
+.ss-select-option[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.ss-select-check { flex: 0 0 16px; color: #2d7046; text-align: center; }
+@media (max-width: 680px) {
+  button.ss-select-trigger { min-height: 48px; font-size: 16px; }
+  .ss-select-menu { font-size: 16px; }
+  .ss-select-option { min-height: 48px; }
+}
+@media (max-width: 480px) {
+  .ss-wizard-page .ss-wizard-grid, .ss-wizard-page .ss-wizard-grid--three { grid-template-columns: minmax(0, 1fr); }
+}
+
 .smartspace-react-slot { width: min(100% - 48px, 1320px); margin: 34px auto 0; }
 #lighting-layout-cards { margin-top: 26px; }
 .ss-layout-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }

@@ -26,6 +26,8 @@ full room object ready for the studio canvas.
 ``database.models`` handles all persistence.
 """
 import os
+import base64
+import io
 import math
 import uuid
 from functools import wraps
@@ -33,6 +35,7 @@ from pathlib import Path
 from typing import Callable
 
 from flask import Blueprint, current_app, jsonify, request, session
+from PIL import Image, ImageOps
 
 from config import FURNITURE_SPECS
 from database.models import (
@@ -51,6 +54,24 @@ from routes.jobs import submit_work
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 projects_bp = Blueprint("projects", __name__)
+
+
+def _room_photo_preview(image_bytes):
+    """Keep the user's photo independently of YOLO results, small enough to persist."""
+    if not image_bytes or len(image_bytes) > 10 * 1024 * 1024:
+        return None
+    try:
+        with Image.open(io.BytesIO(image_bytes)) as source:
+            if source.format not in {"JPEG", "PNG"} or source.width * source.height > 20_000_000:
+                return None
+            photo = ImageOps.exif_transpose(source).convert("RGB")
+            photo.thumbnail((800, 600), Image.Resampling.LANCZOS)
+            output = io.BytesIO()
+            photo.save(output, format="JPEG", quality=75, optimize=True)
+            return "data:image/jpeg;base64," + base64.b64encode(output.getvalue()).decode("ascii")
+    except Exception as error:
+        current_app.logger.warning("Uploaded photo preview could not be decoded: %s", error)
+        return None
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────
@@ -200,6 +221,7 @@ def _prepare_room(form, image_bytes, photo_uploaded, project_context, user_id, v
 
         # Check uploaded room photo for YOLO vision analysis
         annotated_img_b64 = None
+        room_photo = _room_photo_preview(image_bytes) if photo_uploaded else None
         detected_furniture = None
         vision_result = None
         detector = getattr(vision_extractor, "detector", None)
@@ -333,6 +355,8 @@ def _prepare_room(form, image_bytes, photo_uploaded, project_context, user_id, v
             "material": material,
             "furniture": detected_furniture,
             "annotated_image": annotated_img_b64,
+            "room_photo": room_photo,
+            "photo_uploaded": bool(photo_uploaded),
             "vision_model_available": vision_available,
             "vision_model_backend": getattr(detector, "engine_type", "unavailable"),
             "vision_detected_count": (vision_result or {}).get("detected_count", 0),

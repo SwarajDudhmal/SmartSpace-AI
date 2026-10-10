@@ -3906,9 +3906,23 @@ html { scroll-padding-top: 106px; }
 /* ── Studio Progressive Disclosure Layout ──────────────────────────────── */
 .page-studio .studio-workspace-container {
     width: 100%;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 370px;
+    align-items: start;
     gap: 12px;
+}
+
+.page-studio .studio-top-status-bar { grid-column: 1 / -1; }
+.page-studio .studio-canvas-card, .page-studio .studio-furniture-panel { min-width: 0; }
+.page-studio .studio-furniture-panel .studio-furniture-heading { flex-wrap: wrap; gap: 10px; }
+.page-studio .studio-furniture-panel .studio-furniture-heading h2 { font-size: 22px; }
+.page-studio .studio-furniture-panel .studio-tab-bar { display: flex; width: 100%; }
+.page-studio .studio-furniture-panel .studio-tab-btn { flex: 1; min-width: 0; padding: 9px 6px; }
+.page-studio .studio-furniture-panel .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.page-studio #detectedThumbImg[hidden], .page-studio #roomPhotoEmpty[hidden] { display: none; }
+.page-studio #roomPhotoEmpty { padding: 24px 12px; text-align: center; }
+@media (max-width: 1000px) {
+    .page-studio .studio-workspace-container { grid-template-columns: minmax(0, 1fr); }
 }
 
 .page-studio .studio-top-status-bar {

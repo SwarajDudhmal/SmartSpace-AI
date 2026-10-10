@@ -56,29 +56,8 @@ from engine.spatial_utils import (
 from engine.astar_planner import AStarPlanner
 
 
-# Furniture artwork is drawn in screen coordinates (positive y points down),
-# while the room model uses world coordinates (positive y points north/up).
-# These headings describe the visible forward side of each bundled SVG at 0°.
-# The resulting world vector is [cos(theta), sin(theta)], with theta equal to
-# item rotation plus its intrinsic asset heading.
-FORWARD_AXIS_OFFSETS_DEG = {
-    "sofa": 270.0,   # Upholstered seat/front is the lower edge of sofa.svg.
-    "tv": 90.0,      # Screen faces into the room from a south-wall placement.
-    "chair": 270.0,  # Chair seat/front is the lower edge of chair.svg.
-    "desk": 270.0,   # User-facing edge points outward from the desk toward the chair.
-    "bed": 270.0,    # Foot points down the bed; the headboard is the opposite vector.
-}
-
-
-def get_forward_vector(item_type: str, rotation_deg: float) -> Tuple[float, float]:
-    """Return a unit forward vector in room-world coordinates for an item.
-
-    ``rotation_deg`` uses the same positive counter-clockwise convention as
-    SAT corners and the Canvas renderer. The class offset aligns that angle
-    with the visible front/foot/seat side of its default 0° top-down asset.
-    """
-    theta = math.radians(float(rotation_deg) + FORWARD_AXIS_OFFSETS_DEG.get(item_type, 90.0))
-    return (math.cos(theta), math.sin(theta))
+from engine.furniture_orientation import FORWARD_AXIS_OFFSETS_DEG, get_forward_vector
+from engine.layout_comfort import comfort_report
 
 
 def _unit_direction(source: Dict[str, Any], target: Dict[str, Any]) -> Tuple[float, float]:
@@ -328,7 +307,8 @@ class InteriorEnv:
         """
         num_items = len(self.furniture)
         if num_items == 0:
-            return {"total_reward": 0.0, "ergonomics_score": 100}
+            return {"total_reward": 0.0, "ergonomics_score": 100, "circulation_ratio": 1.0,
+                    "unreachable_count": 0, "comfort": {"valid": True, "issues": [], "checks": [], "penalty": 0.0}}
             
         collision_count = 0
         boundary_violations = 0.0
@@ -384,7 +364,7 @@ class InteriorEnv:
         sofa_items = [it for it in self.furniture if it["type"] == "sofa"]
         tv_items = [it for it in self.furniture if it["type"] == "tv"]
         for s in sofa_items:
-            for t in tv_items:
+            for t in sorted(tv_items, key=lambda tv: math.hypot(s["x"] - tv["x"], s["y"] - tv["y"]))[:1]:
                 dist = math.hypot(s["x"] - t["x"], s["y"] - t["y"])
                 if ERGONOMIC_RULES["tv_min_viewing_distance"] <= dist <= ERGONOMIC_RULES["tv_max_viewing_distance"]:
                     ergonomic_bonuses += 2.0
@@ -422,13 +402,13 @@ class InteriorEnv:
             "south": (0.0, -1.0), "north": (0.0, 1.0),
         }
         for bed in (it for it in self.furniture if it["type"] == "bed"):
-            _, closest_wall = calculate_wall_distance(
-                bed["x"], bed["y"], bed["width"], bed["depth"], bed["rotation"],
-                self.room_w, self.room_l,
-            )
             foot_vector = get_forward_vector("bed", bed["rotation"])
             headboard_vector = (-foot_vector[0], -foot_vector[1])
-            wall_alignment = _dot(headboard_vector, wall_vectors[closest_wall])
+            closest_wall = max(wall_vectors, key=lambda wall: _dot(headboard_vector, wall_vectors[wall]))
+            hx = bed["x"] + headboard_vector[0] * bed["depth"] / 2
+            hy = bed["y"] + headboard_vector[1] * bed["depth"] / 2
+            gap = {"west": hx, "east": self.room_w - hx, "south": hy, "north": self.room_l - hy}[closest_wall]
+            wall_alignment = _dot(headboard_vector, wall_vectors[closest_wall]) if gap <= .30 else 0.0
             if wall_alignment > 0.707:
                 directional_bonuses += 1.0
             elif wall_alignment <= 0.0:
@@ -479,9 +459,15 @@ class InteriorEnv:
             })
 
         # 7. A* Circulation evaluation
-        self.planner.build_occupancy_grid(self.furniture, inflation_margin=0.08)
+        self.planner.build_occupancy_grid(self.furniture, inflation_margin=ERGONOMIC_RULES["min_walkway_width"])
         circ_eval = self.planner.evaluate_circulation(self.door_pos, self.furniture)
         circulation_ratio = circ_eval["circulation_score"]
+        comfort = comfort_report(self.furniture, self.room_w, self.room_l, self.door)
+        for item_id in circ_eval["unreachable_items"]:
+            comfort["issues"].append({"code": "unreachable", "item_ids": [item_id],
+                                      "message": "Provide a 0.75 m walking route from the door to the usable side of this item."})
+            comfort["penalty"] += 60.0
+        comfort["valid"] = not comfort["issues"]
         
         # 8. Budget evaluation
         total_cost = sum(item.get("cost", 0.0) for item in self.furniture)
@@ -503,7 +489,7 @@ class InteriorEnv:
         
         total_reward = (
             collision_penalty + r_boundary + r_door + r_window +
-            r_wall + r_ergo + r_directional + r_orientation + r_circ + r_budget
+            r_wall + r_ergo + r_directional + r_orientation + r_circ + r_budget - comfort["penalty"]
         )
         
         # Overall Ergonomic & Quality Score (0 to 100%)
@@ -514,6 +500,7 @@ class InteriorEnv:
         score -= min(20.0, boundary_violations * 20.0)
         score -= min(30.0, orientation_penalties * 15.0)
         score -= (1.0 - circulation_ratio) * 20.0
+        score -= min(50.0, len(comfort["issues"]) * 10.0)
         score = max(0.0, min(100.0, score + (wall_alignment_score * 3.0)))
         
         return {
@@ -525,6 +512,8 @@ class InteriorEnv:
             "orientation_bonus_count": int(directional_bonuses),
             "orientation_penalties": orientation_penalties,
             "orientation_checks": orientation_checks,
+            "comfort": comfort,
+            "walkway_width_m": ERGONOMIC_RULES["min_walkway_width"],
             "boundary_violations": round(float(boundary_violations), 2),
             "circulation_ratio": round(float(circulation_ratio), 2),
             "unreachable_count": len(circ_eval["unreachable_items"]),

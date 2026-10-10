@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Arrange furniture, check circulation and refine a room design with SmartSpace AI.">
   <title>Design Studio · SmartSpace AI</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='20260930-furniture-grid') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='dist/smartspace-frontend.css', v='20260930-furniture-grid') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='20261008-responsive-select') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='dist/smartspace-frontend.css', v='20261008-responsive-select') }}">
 
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -137,7 +137,7 @@
 
         <div id="subtab-photo" class="subtab-content" role="tabpanel" hidden>
           <div class="panel-header"><span class="metric-sub">Room photo analysis</span></div>
-          <div id="visionBoxWrapper" class="vision-preview"><img id="detectedThumbImg" src="/data/samples/sample_room.jpg" alt="Room photo preview"><span id="visionPreviewStatus" class="metric-sub">Checking vision model…</span></div>
+          <div id="visionBoxWrapper" class="vision-preview"><img id="detectedThumbImg" hidden alt="Your uploaded room photo"><p id="roomPhotoEmpty" class="metric-sub">No photo was uploaded for this project. Add your room photo in Step 4 when creating a project.</p><span id="visionPreviewStatus" class="metric-sub"></span></div>
         </div>
       </section>
     </div>
@@ -184,11 +184,11 @@
       </div>
       <p class="recommendation-engine-note">Each bundle is checked against your room, budget, furniture collisions and A* circulation path before it can be applied.</p>
       <div class="recommendation-request-grid">
-        <label>Room type<select id="recommendationRoomType"><option value="living_room">Living room</option><option value="bedroom">Bedroom</option><option value="home_office">Home office</option><option value="dining_room">Dining room</option><option value="kitchen">Kitchen</option><option value="bathroom">Bathroom</option></select></label>
+        <label>Room type<select id="recommendationRoomType" data-responsive-select><option value="living_room">Living room</option><option value="bedroom">Bedroom</option><option value="home_office">Home office</option><option value="dining_room">Dining room</option><option value="kitchen">Kitchen</option><option value="bathroom">Bathroom</option></select></label>
         <label>Width (ft)<input id="recommendationWidth" type="number" min="6" max="60" step="0.5" value="14"></label>
         <label>Length (ft)<input id="recommendationLength" type="number" min="6" max="60" step="0.5" value="16"></label>
         <label>Budget (₹)<input id="recommendationBudget" type="number" min="5000" step="500" value="85000"></label>
-        <label>Style<select id="recommendationStyle"><option value="modern">Modern</option><option value="minimalist">Minimalist</option><option value="scandinavian">Scandinavian</option><option value="industrial">Industrial</option><option value="contemporary">Contemporary</option></select></label>
+        <label>Style<select id="recommendationStyle" data-responsive-select><option value="modern">Modern</option><option value="minimalist">Minimalist</option><option value="scandinavian">Scandinavian</option><option value="industrial">Industrial</option><option value="contemporary">Contemporary</option></select></label>
       </div>
       <button type="button" id="generateRecommendationsBtn" class="btn btn-dqn">Find matching designs <span aria-hidden="true">→</span></button>
       <p id="recommendationRequestError" class="form-error" role="alert" hidden></p>
@@ -200,12 +200,12 @@
   {% include "_site_footer.html" %}
 
   <script src="{{ url_for('static', filename='js/furniture_renderer.js', v='20260928-shared-furniture-v1') }}"></script>
-  <script src="{{ url_for('static', filename='js/floorplan_canvas.js', v='20260928-directional-assets-v3') }}"></script>
+  <script src="{{ url_for('static', filename='js/floorplan_canvas.js', v='20261009-comfort-layout') }}"></script>
   <script>window.smartSpaceFurnitureSpecs = {{ specs | tojson }};</script>
   <script src="{{ url_for('static', filename='js/room_3d.js', v='20260928-reference-studio') }}"></script>
   <script src="{{ url_for('static', filename='js/api.js', v='20260929-viva') }}"></script>
-  <script src="{{ url_for('static', filename='js/app.js', v='20260930-furniture-grid') }}"></script>
-  <script src="{{ url_for('static', filename='js/recommendations.js', v='20260928-react-handoff') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js', v='20261009-comfort-layout') }}"></script>
+  <script src="{{ url_for('static', filename='js/recommendations.js', v='20261008-responsive-select') }}"></script>
   <script>
     document.querySelectorAll('.studio-tab-btn').forEach((button) => {
       button.addEventListener('click', () => {
@@ -226,6 +226,6 @@
       });
     });
   </script>
-  <script type="module" src="{{ url_for('static', filename='dist/smartspace-frontend.js', v='20260930-furniture-grid') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='dist/smartspace-frontend.js', v='20261008-responsive-select') }}"></script>
 </body>
 </html>

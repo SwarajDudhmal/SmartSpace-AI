@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode }
 import { ProjectPhotoUpload } from './ProjectPhotoUpload';
 import { DesignLoading } from './DesignLoading';
 import { requestDesign } from '../api';
+import { ResponsiveSelect } from './ResponsiveSelect';
 
 type WizardData = {
   name: string;
@@ -41,13 +42,12 @@ function roomTypeKey(value: string) {
   return 'living_room';
 }
 
-export function ProjectWizard({ initialStep = 1 }: { initialStep?: number }) {
-  const [step, setStep] = useState(Math.min(4, Math.max(1, initialStep)));
+export function ProjectWizard() {
+  const [step, setStep] = useState(1);
   const [values, setValues] = useState<WizardData>({
-    name: 'My Modern Living Room', roomType: 'Living Room',
-    description: 'Need a spacious and ergonomic layout',
-    length: '12', width: '10', height: '10', doors: '1', windows: '1', budget: '85000',
-    designStyle: 'Modern', primaryColor: 'White', secondaryColor: 'Beige', preferredMaterial: 'Wood',
+    name: '', roomType: '', description: '',
+    length: '', width: '', height: '', doors: '', windows: '', budget: '',
+    designStyle: '', primaryColor: '', secondaryColor: '', preferredMaterial: '',
   });
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [selectedBundleId, setSelectedBundleId] = useState('');
@@ -98,32 +98,47 @@ export function ProjectWizard({ initialStep = 1 }: { initialStep?: number }) {
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
   }
 
-  function continueWizard(event: MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-    setError('');
-    if (step === 1 && values.name.trim().length < 2) {
-      setError('Give this project a name with at least two characters.');
-      return;
+  function stepError(target: number): string {
+    if (target === 1) {
+      if (values.name.trim().length < 2) return 'Give this project a name with at least two characters.';
+      if (!values.roomType) return 'Choose a room type.';
     }
-    if (step === 2) {
+    if (target === 2) {
+      if (['length', 'width', 'height', 'doors', 'windows', 'budget'].some((key) => !values[key as keyof WizardData].trim())) {
+        return 'Enter every room measurement, door/window count and budget. Enter 0 if there are no windows.';
+      }
       const length = Number(values.length), width = Number(values.width), height = Number(values.height);
       const budget = Number(values.budget);
       const doors = Number(values.doors), windows = Number(values.windows);
       if (!Number.isFinite(length) || length < 6 || length > 60 || !Number.isFinite(width) || width < 6 || width > 60
         || !Number.isFinite(height) || height < 7 || height > 25 || !Number.isFinite(budget) || budget < 20000 || budget > 500000
         || !Number.isInteger(doors) || doors < 1 || doors > 5 || !Number.isInteger(windows) || windows < 0 || windows > 6) {
-        setError('Check the measurements and door/window counts; set a budget from ₹20,000 to ₹5,00,000.');
-        return;
+        return 'Check the measurements and door/window counts; set a budget from ₹20,000 to ₹5,00,000.';
       }
     }
-    if (step === 3 && (!values.primaryColor.trim() || !values.secondaryColor.trim())) {
-      setError('Add both a primary and secondary color, or keep the suggested defaults.');
-      return;
+    if (target === 3 && (!values.designStyle || !values.preferredMaterial || !values.primaryColor.trim() || !values.secondaryColor.trim())) {
+      return 'Choose a design style and material, and enter both colors.';
     }
+    return '';
+  }
+
+  function validateAllSteps(): boolean {
+    for (const target of [1, 2, 3]) {
+      const message = stepError(target);
+      if (message) { moveTo(target); setError(message); return false; }
+    }
+    return true;
+  }
+
+  function continueWizard(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    const message = stepError(step);
+    if (message) { setError(message); return; }
     moveTo(step + 1);
   }
 
   async function previewBundles() {
+    if (!validateAllSteps()) return;
     recommendationRequest.current?.abort();
     const controller = new AbortController();
     recommendationRequest.current = controller;
@@ -157,6 +172,7 @@ export function ProjectWizard({ initialStep = 1 }: { initialStep?: number }) {
   async function launchStudio(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     if (step !== 4 || event.detail > 1 || launching || launchRequest.current) return;
+    if (!validateAllSteps()) return;
     if (photoError) { setError('Remove or replace the invalid photo before opening Studio.'); return; }
     recommendationRequest.current?.abort();
     setLoadingBundles(false);
@@ -227,20 +243,19 @@ export function ProjectWizard({ initialStep = 1 }: { initialStep?: number }) {
   function select(label: string, key: keyof WizardData, choices: string[]) {
     return <label className="ss-wizard-field" htmlFor={`wizard-${key}`} key={key}>
       <span>{label}</span>
-      <select id={`wizard-${key}`} value={values[key]} onChange={(event) => update(key, event.currentTarget.value)}>
-        {choices.map((choice) => <option key={choice}>{choice}</option>)}
-      </select>
+      <ResponsiveSelect id={`wizard-${key}`} label={label} value={values[key]}
+        options={choices.map((choice) => ({ value: choice, label: choice }))} onChange={(value) => update(key, value)} />
     </label>;
   }
 
   let panel: ReactNode;
   if (step === 1) {
     panel = <div className="ss-wizard-grid">
-      {field('Project name', 'name', 'text', { required: true, maxLength: 120, placeholder: 'e.g. Calm family living room' })}
+      {field('Project name', 'name', 'text', { required: true, maxLength: 120 })}
       {select('Room type', 'roomType', ['Living Room', 'Bedroom', 'Master Bedroom', 'Kitchen', 'Bathroom', 'Dining Room', 'Home Office', 'Studio Apartment'])}
       <label className="ss-wizard-field ss-wizard-field--wide" htmlFor="wizard-description">
         <span>What should this room feel like?</span>
-        <textarea id="wizard-description" rows={4} value={values.description} onChange={(event) => update('description', event.currentTarget.value)} placeholder="Tell us what matters in this space…" />
+        <textarea id="wizard-description" rows={4} value={values.description} onChange={(event) => update('description', event.currentTarget.value)} />
       </label>
     </div>;
   } else if (step === 2) {
