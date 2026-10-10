@@ -1,176 +1,243 @@
-# SmartSpace AI: Vision-Driven DQN Interior Layout Optimization Platform
+# SmartSpace AI
 
-SmartSpace AI is an interior planning website with a shared design flow, interactive floorplan studio, room evaluation, and layout optimization. Real furniture detection requires trained YOLO weights; when those weights are absent the studio labels photo detection as unavailable and uses a recommended starter layout. The layout optimizer uses a trained DQN checkpoint when present and otherwise performs deterministic spatial search.
+### Plan a room. Arrange furniture. Check how the space works.
 
----
+SmartSpace AI is an interior layout planning application with a four-step project wizard, an interactive 2D/3D studio, optional photo-based furniture detection, and a spatial optimizer. Enter room measurements, choose your preferences, and build a layout that considers furniture fit, viewing direction, and walking access.
 
-## 🏛️ System Architecture
+[Getting started](#getting-started) · [Project workflow](#project-workflow) · [Algorithms](#how-the-layout-optimizer-works) · [Tech stack](#tech-stack) · [API](#main-api-endpoints)
 
+## Features
+
+- **Four-step project wizard** — Enter project details, room measurements in feet, budget in INR, design preferences, and an optional room photo. New project inputs start empty.
+- **Interactive design studio** — Edit a proportional HTML5 Canvas floor plan, switch to a Three.js view, and add, move, rotate, replace, or delete furniture.
+- **Detailed furniture assets** — Top-down SVG furniture scales and rotates with the same footprints used by collision detection.
+- **Responsive furniture panel** — Manage furniture beside the floor plan on desktop, with a stacked layout on smaller screens.
+- **Catalog and recommendations** — Browse at least 50 seeded furniture variants across ten classes and preview room-specific recommendation bundles.
+- **Collision and comfort checks** — Evaluate rotated furniture bounds, room boundaries, sofa–TV viewing, usable furniture access, and walking paths.
+- **Optional YOLO photo analysis** — Detect supported objects from an uploaded photo, with a room-type starter layout when photo inference is unavailable.
+- **Accounts and project history** — Register, sign in, save designs, and resume them in the studio.
+- **Live feedback** — View estimated furniture cost, layout metrics, circulation paths, clearance outlines, and facing arrows.
+
+## Project workflow
+
+```mermaid
+flowchart TD
+    A[Start a new project] --> B[Project name, room type and description]
+    B --> C[Room dimensions, doors, windows and budget]
+    C --> D[Style, colors and material preferences]
+    D --> E[Optional photo upload and recommendation preview]
+    E --> F{Photo inference available?}
+    F -->|Yes| G[YOLO detections mapped to room coordinates]
+    F -->|No| H[Room-type starter furniture]
+    G --> I[Open 2D / 3D studio]
+    H --> I
+    I --> J[Edit furniture or load a recommendation]
+    J --> K[Optimize positions and orientations]
+    K --> L[SAT, comfort and A* validation]
+    L -->|Checks pass| M[Apply layout and refresh metrics]
+    L -->|Unresolved constraints| N[Keep current plan and explain issues]
+    M --> O[Save project or export a snapshot]
 ```
-User Room Photo / Camera
-          │
-          ▼
-┌──────────────────────────────────────────────┐
-│       YOLO Interior Vision Front-End        │
-│  (10 Classes: bed, sofa, chair, table,       │
-│   wardrobe, desk, tv, cabinet, door, window) │
-└──────────────────────┬───────────────────────┘
-                       │ Quantified Spatial State
-                       ▼
-┌──────────────────────────────────────────────┐
-│        DQN Interior Layout Optimizer         │
-│  • Separating Axis Theorem (SAT) Collision   │
-│  • A* Walking Path Clearance & Circulation   │
-│  • Window Natural Daylight Vectors           │
-│  • Ergonomic TV Viewing & Wall Alignments     │
-│  • Budget Constraint Optimization            │
-└──────────────────────┬───────────────────────┘
-                       │ Step-by-Step Trajectory
-                       ▼
-┌──────────────────────────────────────────────┐
-│     Full-Stack Interactive Design Studio     │
-│  • Real-Time 2D Architectural Floorplan     │
-│  • Interactive 3D WebGL Room (Three.js)      │
-│  • Dynamic Animated Layout Convergence       │
-│  • Specification & Schedule Export (.txt)    │
-└──────────────────────────────────────────────┘
-```
 
----
+The photo shown in the studio is the project's uploaded photo. Floor plans are rendered from furniture geometry; the application does not generate photorealistic room images with a generative image API.
 
-## 🏷️ YOLO 10-Class Interior Taxonomy
+## Tech stack
 
-The computer vision front-end is specifically tuned for 10 interior categories:
+| Layer | Implementation |
+| --- | --- |
+| Backend | Python, Flask 3.x, blueprint-based routes |
+| React interface | React 19, TypeScript, Vite 7, Tailwind CSS 4, Framer Motion |
+| Studio rendering | Vanilla JavaScript, HTML5 Canvas, Three.js |
+| Persistence | SQLite through Python's built-in `sqlite3` module |
+| Authentication | Flask signed-cookie sessions and Werkzeug scrypt password hashes |
+| Photo detection | Optional Ultralytics YOLO; optional ONNX runtime |
+| Layout engine | NumPy, oriented SAT geometry, A* pathfinding, bounded placement search, DQN support |
 
-| ID | Class | Real-World Dim (W × D × H) | Clearance | Base Cost | Wall Preference |
-|:--:|:------|:---------------------------|:----------|:----------|:----------------|
-| **0** | `bed` | 1.6m × 2.0m × 0.8m | 0.8m front | ₹12,000 | Back to wall |
-| **1** | `sofa` | 2.1m × 0.9m × 0.85m | 0.9m front | ₹14,000 | Flexible |
-| **2** | `chair` | 0.6m × 0.6m × 0.85m | 0.5m front | ₹1,500 | Flexible |
-| **3** | `table` | 1.4m × 0.8m × 0.75m | 0.7m sides | ₹3,500 | Flexible |
-| **4** | `wardrobe` | 1.5m × 0.6m × 2.1m | 0.9m front | ₹8,500 | Back to wall |
-| **5** | `desk` | 1.3m × 0.65m × 0.75m | 0.8m front | ₹4,200 | Lateral/Back to wall |
-| **6** | `tv` | 1.2m × 0.15m × 0.7m | 1.8m front | ₹8,000 | Wall mounted/console |
-| **7** | `cabinet` | 1.0m × 0.45m × 0.9m | 0.7m front | ₹3,500 | Back to wall |
-| **8** | `door` | 0.9m × 0.15m × 2.1m | 1.0m swing | — | Perimeter wall |
-| **9** | `window` | 1.4m × 0.15m × 1.2m | 0.6m light | — | Perimeter wall |
+The frontend is hybrid: React components are mounted inside Flask templates, while the existing Canvas and Three.js editors share layout data through JavaScript events. SQLite is the implemented database backend; SQLAlchemy and PostgreSQL are not required.
 
----
+## Getting started
 
-## 🚀 Quickstart & Installation
+### 1. Clone the repository
 
-### 1. Requirements
-Ensure Python 3.10+ is installed:
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/SwarajDudhmal/SmartSpace-AI.git
+cd SmartSpace-AI
 ```
 
-For real photo inference, install `pip install -r requirements-vision.txt` using the Python environment that runs Flask. The detector prefers a custom `data/models/yolo_interior.pt` or `.onnx` checkpoint; when absent, Ultralytics automatically downloads `data/models/yolov8n.pt`. Its pretrained labels map to bed, sofa, chair, table and tv. Wardrobe, desk, cabinet, door and window require a custom trained checkpoint. ONNX inference also needs `onnxruntime`. Photo-to-floor coordinates are estimates; missing weights, failed inference or unusable photos use room-type starter furniture.
+### 2. Create a Python environment
 
-### 2. Launch the Studio Web Interface
+Use Python 3.12 for the local setup.
+
+**Windows PowerShell**
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe app.py
+```
+
+**macOS / Linux**
+
 ```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 python app.py
 ```
-Open your browser at: **`http://127.0.0.1:5000`**
 
-### Initialize the furniture and room recommendation database
+Open **[http://127.0.0.1:5000](http://127.0.0.1:5000)**. Run the application from the repository root and access pages through Flask so templates and static assets load correctly.
+
+The application initializes its SQLite tables and catalog on startup. The compiled frontend in `static/dist/` is included, so Node.js is only needed when editing and rebuilding the React interface.
+
+### 3. Optional: enable photo detection
+
+Install the vision dependencies using the same Python environment that launches Flask:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-vision.txt
+```
+
+On macOS/Linux with the environment activated, use `python -m pip install -r requirements-vision.txt`.
+
+The detector prefers a custom checkpoint at `data/models/yolo_interior.pt` or `data/models/yolo_interior.onnx`. When no custom checkpoint is available, it attempts to download `yolov8n.pt` through Ultralytics. The first download requires an internet connection. ONNX inference additionally requires `onnxruntime`.
+
+The pretrained fallback maps detections for **bed, sofa, chair, table, and TV**. Detecting all ten project classes requires an appropriate custom-trained model. If dependencies, weights, download, or inference are unavailable, the application uses starter furniture and reports the fallback.
+
+### 4. Optional: rebuild the React frontend
+
+Use Node.js **20.19+ within the 20.x line, or 22.12+**, matching the Vite version in the lockfile, and install pnpm.
+
+```bash
+cd frontend
+pnpm install --frozen-lockfile
+pnpm run build
+cd ..
+```
+
+Vite writes the JavaScript and CSS bundles into `static/dist/`, which Flask serves to the homepage, wizard, dashboard, and studio. After rebuilding, refresh the browser to load the updated assets.
+
+### 5. Optional: seed replay data
+
+Run with your project Python environment:
+
 ```bash
 python scripts/seed_database.py
 ```
-This creates the SQLite catalog, curated presets, and replay-buffer examples.
-The included records are ergonomic-rule seed data, not 3D-FRONT/3D-FUTURE
-exports. See [the database and recommendation guide](docs/database-and-recommendations.md)
-for schema, importer format, and DQN training details.
 
----
+This initializes the catalog, curated presets, and offline replay transitions. Bundled dimensions and INR costs are illustrative project data, not live retail prices or imported 3D-FRONT/3D-FUTURE records. See the [database and recommendation guide](docs/database-and-recommendations.md) for catalog imports and schema details.
 
-## 🛠️ Dataset Tools & Training Workflows
+## How the layout optimizer works
 
-### 1. Initialize YOLO Dataset Structure & `data.yaml`
-```bash
-python vision/dataset_tools/create_dataset.py --path data/yolo_dataset
+Optimization evaluates more than whether furniture rectangles overlap:
+
+| Stage | What it does |
+| --- | --- |
+| **SAT collision detection** | Checks rotated furniture footprints and room-boundary containment. |
+| **Placement repair** | Uses bounded placement search and backtracking to separate overlapping items without resizing or removing them. |
+| **Joint arrangement search** | Tries room-wide positions and multiple orientations, including direct 180° changes that small moves can miss. |
+| **Viewing and comfort checks** | Checks mutual sofa–TV facing, viewing distance, sightline obstacles, front access, bed placement, and chair–desk relationships. |
+| **A* circulation** | Checks routes from the entry to usable furniture sides on an occupancy grid that accounts for the configured 0.75 m walking width. |
+| **Local refinement** | Improves the combined reward while preserving geometric validity and avoiding comfort regressions. A trained DQN, when installed, supplies action tie-breaking scores. |
+| **Final validation** | Applies an optimized result only when geometry and comfort checks pass; otherwise reports unresolved constraints and preserves the user's plan. |
+
+Sofa–TV checks use a **30° forward cone** and the viewing-distance range configured in `config.py` (currently **1.5–3.8 m**). The engine also penalizes blocked doors, daylight obstruction by tall storage, and budget overruns.
+
+The optimizer is a time-bounded heuristic. It searches for a valid, better arrangement; it does not prove a global optimum. Failure within the search budget does not prove that a room is impossible to furnish. A* uses an approximate grid, and photo-derived positions are estimates that users can adjust.
+
+### 133-dimensional state and 48 actions
+
+The DQN state contains:
+
+```text
+5 room features + 8 furniture slots × 16 features = 133 values
 ```
-Creates `images/{train,val,test}` and `labels/{train,val,test}` and generates `data.yaml`.
 
-### 2. Generate Synthetic Labeled Training Images
-```bash
-python vision/dataset_tools/synthetic_gen.py --output data/yolo_dataset --train 30 --val 8 --test 6
-```
-Generates annotated indoor room images with matching normalized YOLO labels (`class cx cy w h`).
+- **Room features:** width, length, budget, and two normalized entry coordinates.
+- **Each furniture slot:** position, width, depth, rotation, ten class indicators, and a presence flag.
+- **Actions:** six actions per slot — shift ±X, shift ±Y, rotate +90°, and snap to a wall.
+- **Capacity:** the optimizer supports up to eight furniture items; larger submissions are rejected rather than silently truncated by the optimization endpoint.
 
-### 3. Remap Public Datasets (Kaggle Architecture, COCO, Roboflow)
-```bash
-python vision/dataset_tools/remap_dataset.py --src-labels path/to/raw --dst-labels data/yolo_dataset/labels/train
-```
+The ten catalog classes are `bed`, `sofa`, `chair`, `table`, `wardrobe`, `desk`, `tv`, `cabinet`, `door`, and `window`. Room openings and other configuration also remain available outside the encoded state.
 
-### 4. Train YOLO11 from Scratch (Option B)
-```bash
-python vision/dataset_tools/train_yolo.py --data data/yolo_dataset/data.yaml --epochs 50
-```
-Trains YOLO11 using `yolo11n.yaml` (random initialization), installs `yolo_interior.pt` and `yolo_interior.onnx` under `data/models`, and writes telemetry from the actual training run. The dataset YAML uses paths relative to its own folder.
+### Model availability
 
-### 5. Train the DQN Layout Agent
+Recommendations use catalog selection and curated spatial rules, with DQN refinement when a compatible trained checkpoint is available. The repository does not bundle a trained 3D-FRONT VAE or layout Transformer. A trained DQN is optional; spatial search remains available without one.
+
+To train the DQN and save its checkpoint and training history under `data/models/`:
+
 ```bash
 python engine/train_dqn.py --episodes 50 --steps 30
 ```
-Trains the Deep Q-Network with multi-objective rewards, then saves `dqn_policy.npz` and training history under `data/models`. The NumPy fallback trains with mini-batch backpropagation as well.
 
----
+For custom YOLO training, prepare labeled images using `vision/dataset_tools/`, then run:
 
-## 🧠 Research Paper Formulation (DQN Layout Optimizer)
-
-### Markov Decision Process (MDP)
-- **State Space $S$**: Normalized room dimensions $(W, L)$, entry door vector, window daylight vectors, and for each piece of furniture: $[x_i, y_i, w_i, d_i, \theta_i, \text{one\_hot}(c_i), \text{placed}_i]$.
-- **Action Space $A$**: Discrete parameterized actions: $\{\pm \Delta X, \pm \Delta Y, +90^\circ \text{ rotation}, \text{Snap to Wall}\}$.
-- **Reward Function**:
-  $$R = w_{\text{coll}} R_{\text{coll}} + w_{\text{circ}} R_{\text{circ}} + w_{\text{align}} R_{\text{align}} + w_{\text{light}} R_{\text{light}} + w_{\text{ergo}} R_{\text{ergo}} + w_{\text{budget}} R_{\text{budget}}$$
-
----
-
-## 📂 Project Directory Structure
-
+```bash
+python vision/dataset_tools/train_yolo.py --data data/yolo_dataset/data.yaml --epochs 50
 ```
+
+The training script defaults to a YOLO11 configuration initialized from scratch. Training quality depends on the dataset; bundled examples are not evidence of benchmark-level performance.
+
+## Project structure
+
+```text
 SmartSpace-AI/
-├── app.py                      # Flask Server & REST APIs
-├── config.py                   # 10 Target Classes, Dimensions & Rules
-├── requirements.txt            # Dependencies
-├── README.md                   # Documentation
-│
-├── engine/                     # DQN & Spatial Optimization Engine
-│   ├── interior_env.py         # Gymnasium-compatible Interior Design MDP
-│   ├── dqn_agent.py            # Deep Q-Network Agent & Trajectory Generator
-│   ├── astar_planner.py        # A* Circulation Pathfinding
-│   ├── spatial_utils.py        # SAT 2D Collision & Bounding Box Math
-│   └── train_dqn.py            # CLI Batch Training for DQN
-│
-├── vision/                     # YOLO Vision Module
-│   ├── detector.py             # Room Image Analyzer & State Converter
-│   ├── yolo_model.py           # Multi-backend YOLO Inference
-│   └── dataset_tools/
-│       ├── create_dataset.py   # Dataset Folder & data.yaml Initializer
-│       ├── synthetic_gen.py    # Synthetic Indoor Labeled Data Generator
-│       ├── remap_dataset.py    # Kaggle/COCO/Roboflow Class Remapper
-│       └── train_yolo.py       # Option B From-Scratch YOLO11 Training
-│
-├── static/                     # Web Frontend
-│   ├── css/style.css           # Glassmorphism Dark Mode Styling
-│   └── js/
-│       ├── app.js              # Application Coordinator
-│       ├── floorplan_canvas.js # Interactive 2D Floorplan & A* Paths
-│       ├── room_3d.js          # Three.js 3D WebGL Room Viewer
-│       └── charts.js           # DQN & YOLO Training Curves
-│
-├── templates/
-│   └── index.html              # Main Studio Interface
-│
-├── data/
-│   ├── samples/                # Sample Test Room Photos
-│   ├── models/                 # Model Weights & Telemetry
-│   └── yolo_dataset/           # YOLO Dataset (images & labels)
-│
-└── tests/                      # Automated Unit Test Suite
-    ├── test_spatial.py
-    ├── test_astar.py
-    ├── test_dqn.py
-    └── test_vision.py
+├── app.py                       # Flask application factory and startup
+├── config.py                    # Furniture specifications and ergonomic rules
+├── database/                    # SQLite catalog, replay, users and project history
+├── engine/
+│   ├── interior_env.py          # MDP state, actions and rewards
+│   ├── dqn_agent.py             # DQN support and optimization trajectory
+│   ├── sat_collision.py         # Rotated footprints and spatial checks
+│   ├── layout_repair.py         # Collision and boundary repair
+│   ├── layout_comfort.py        # Viewing, access and joint arrangement search
+│   ├── furniture_orientation.py # Asset-aligned headings and approach points
+│   ├── astar_planner.py         # Walking-path evaluation
+│   └── recommender.py           # Catalog-based recommendation bundles
+├── frontend/                    # React/TypeScript source and Vite configuration
+├── routes/                      # Auth, projects, recommendations, jobs and views
+├── static/
+│   ├── assets/furniture/        # Top-down SVG furniture
+│   ├── dist/                    # Compiled React assets served by Flask
+│   └── js/                      # Canvas/Three.js studio and API integration
+├── templates/                   # Flask pages and React mounting points
+├── vision/                      # Photo detection and dataset/training tools
+├── scripts/seed_database.py     # Catalog, preset and replay seeding
+├── docs/                        # Architecture diagrams and database guide
+└── tests/                       # Existing automated test suite
 ```
+
+## Main API endpoints
+
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /api/projects` | Capture project basics |
+| `POST /api/rooms` | Prepare a room from the submitted requirements |
+| `POST /api/detect` | Process an uploaded room photo |
+| `POST /api/recommendations` | Generate furniture/layout recommendations |
+| `POST /api/evaluate` | Calculate layout metrics and design advice |
+| `POST /api/optimize` | Search for a validated arrangement |
+| `GET /api/jobs/<job_id>` | Poll queued model/search work |
+| `GET /api/system-status` | Inspect available model capabilities |
+| `POST /api/auth/register`, `POST /api/auth/login` | Account registration and sign-in |
+| `GET /api/project-history`, `POST /api/project-history` | List or save a user's projects |
+| `GET /api/project-history/<history_id>` | Load a saved project |
+
+Long-running operations may return **HTTP 202** for background processing. The shared frontend API helper polls for completion. An unresolved optimization returns **HTTP 422** with an explanation.
+
+## Local configuration
+
+| Variable | Purpose |
+| --- | --- |
+| `SMARTSPACE_DB_PATH` | Override the default `data/smartspace.sqlite3` database path |
+| `SMARTSPACE_SECRET_KEY` | Supply a persistent Flask session secret; local startup otherwise creates `data/.session_secret` |
+| `SMARTSPACE_COOKIE_SECURE` | Set to `true` when serving the application over HTTPS |
+
+Local databases, session secrets, uploaded files, virtual environments, and model weights are excluded from Git. The included `python app.py` command starts Flask's local development server.
+
+## Documentation
+
+- [Database and recommendations](docs/database-and-recommendations.md)
+- [Workflow diagram](docs/smartspace_ai_workflow.svg)
+- [Real-time sequence diagram](docs/smartspace_ai_realtime_sequence.svg)
+- [System architecture](docs/smartspace-architecture.png)
+- [Source provenance](SOURCE.md)
